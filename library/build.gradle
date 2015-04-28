@@ -24,14 +24,14 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:22.0.0'
+    compile 'com.android.support:support-v4:22.0.0'
     compile 'com.jakewharton:disklrucache:2.0.2'
 }
 
 def siteUrl = 'https://github.com/douo/lru-image'      // 项目的主页
 def gitUrl = 'https://github.com/douo/lru-image.git'   // Git仓库的url
 
-group = "info.dourok.lruimage"
+group = "info.dourok"
 
 install {
     repositories.mavenInstaller {
@@ -40,7 +40,7 @@ install {
             project {
                 packaging 'aar'
                 // Add your description here
-                name 'Android BounceProgressBar Widget' 	//项目描述
+                name 'Load image to ImageView from url, cache image using LRU Cache ' 	//项目描述
                 url siteUrl
                 // Set your license
                 licenses {
@@ -70,6 +70,7 @@ task sourcesJar(type: Jar) {
     classifier = 'sources'
 }
 task javadoc(type: Javadoc) {
+    options.encoding = "UTF-8"
     source = android.sourceSets.main.java.srcDirs
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
 }
