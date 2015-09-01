@@ -12,19 +12,6 @@ import java.util.concurrent.Executors;
  * Created by charry on 2014/11/20.
  */
 public class LruImageTask implements Runnable {
-    private static final int LOADING_THREADS = 4;
-    private static ExecutorService threadPool = Executors.newFixedThreadPool(LOADING_THREADS);
-
-    public static void execute(LruImageTask task) {
-        threadPool.execute(task);
-    }
-
-    public static void cancelAllTasks() {
-        threadPool.shutdownNow();
-        threadPool = Executors.newFixedThreadPool(LOADING_THREADS);
-    }
-
-
     private static final int BITMAP_READY = 0;
     private static final int BITMAP_FAILURE = -1;
 

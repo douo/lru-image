@@ -13,9 +13,16 @@ import java.util.concurrent.Executors;
  */
 public class LruImageView extends ImageView {
 
+    private static final int LOADING_THREADS = 4;
+    private static ExecutorService DEFAULT_EXECUTOR = Executors.newFixedThreadPool(LOADING_THREADS);
 
+    public static void cancelAllTasksInDefaultExecutor() {
+        DEFAULT_EXECUTOR.shutdownNow();
+        DEFAULT_EXECUTOR = Executors.newFixedThreadPool(LOADING_THREADS);
+    }
+
+    private ExecutorService mLoader;
     private LruImageTask currentTask;
-
 
     public LruImageView(Context context) {
         super(context);
@@ -108,9 +115,20 @@ public class LruImageView extends ImageView {
                 }
             }
         });
+        getLoader().execute(currentTask);
+    }
 
-        // Run the task in a threadpool
-        LruImageTask.execute(currentTask);
+
+    public ExecutorService getLoader() {
+        if (mLoader == null) {
+            return DEFAULT_EXECUTOR;
+        } else {
+            return mLoader;
+        }
+    }
+
+    public void setLoader(ExecutorService loader) {
+        this.mLoader = loader;
     }
 
 
