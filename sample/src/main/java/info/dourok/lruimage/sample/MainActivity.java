@@ -26,8 +26,8 @@ public class MainActivity extends ActionBarActivity {
 
         content.setImageUrl("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg");
 
-        LruImageTask.execute(new LruImageTask(this,
-                new WebImage("http://breadedcat.com/wp-content/uploads/2012/02/cat-breading-tutorial-004.jpg"),
+        LruImageTask task = new LruImageTask(this,
+                new WebImage("http://breadedcat.com/wp-content/gallery/cat-breading/in-bread-cat-11.jpg"),
                 new LruImageTask.OnCompleteListener() {
                     @Override
                     public void onSuccess(LruImage image, Bitmap bitmap) {
@@ -43,7 +43,13 @@ public class MainActivity extends ActionBarActivity {
                     public void onFailure(LruImage image, LruImageException e) {
 
                     }
-                }));
+
+                    @Override
+                    public void cancel() {
+                        System.out.println("cancel");
+                    }
+                }).execute();
+        task.cancel(true);
     }
 
     @Override

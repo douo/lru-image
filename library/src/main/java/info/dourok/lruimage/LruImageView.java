@@ -16,7 +16,6 @@ public class LruImageView extends ImageView {
 
     private LruImageTask currentTask;
 
-
     public LruImageView(Context context) {
         super(context);
     }
@@ -89,7 +88,7 @@ public class LruImageView extends ImageView {
         }
 
         // Set up the new task
-        currentTask = new LruImageTask(getContext(), image, new LruImageTask.OnCompleteListener() {
+        currentTask = new LruImageTask(getContext(), image, getLoader(), new LruImageTask.OnCompleteListener() {
             @Override
             public void onSuccess(LruImage image, Bitmap bitmap) {
                 setImageBitmap(bitmap);
@@ -107,10 +106,26 @@ public class LruImageView extends ImageView {
                     completeListener.onFailure(image, e);
                 }
             }
-        });
 
-        // Run the task in a threadpool
-        LruImageTask.execute(currentTask);
+            @Override
+            public void cancel() {
+                if (completeListener != null) {
+                    completeListener.cancel();
+                }
+            }
+        });
+        currentTask.execute();
+    }
+
+
+    private ExecutorService mLoader;
+
+    public ExecutorService getLoader() {
+        return mLoader;
+    }
+
+    public void setLoader(ExecutorService loader) {
+        this.mLoader = loader;
     }
 
 

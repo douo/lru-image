@@ -2,16 +2,16 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
-version = "0.0.7"
+version = "0.0.11"
 android {
     compileSdkVersion 22
     buildToolsVersion "22.0.1"
     resourcePrefix "lruimage__"
     defaultConfig {
         minSdkVersion 14
-        targetSdkVersion 21
+        targetSdkVersion 22
 
-        versionCode 1
+        versionCode 11
         versionName version
     }
     buildTypes {
@@ -24,7 +24,7 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:support-v4:22.0.0'
+    compile 'com.android.support:support-v4:22.2.1'
     compile 'com.jakewharton:disklrucache:2.0.2'
 }
 
