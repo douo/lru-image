@@ -5,21 +5,54 @@ import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Message;
 
+import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 /**
  * Created by charry on 2014/11/20.
  */
 public class LruImageTask implements Runnable {
+    private static final int LOADING_THREADS = 4;
+
+    private static ExecutorService DEFAULT_LOADER = Executors.newFixedThreadPool(LOADING_THREADS);
+
+    public static void cancelAllTasksInDefaultExecutor() {
+        DEFAULT_LOADER.shutdownNow();
+        DEFAULT_LOADER = Executors.newFixedThreadPool(LOADING_THREADS);
+    }
+
+    private ExecutorService mLoader;
+
     private static final int BITMAP_READY = 0;
     private static final int BITMAP_FAILURE = -1;
+    private static final int BITMAP_CANCEL = 1;
 
-
-    private boolean cancelled = false;
     private OnCompleteHandler onCompleteHandler;
     private LruImage image;
     private Context context;
+    private int priority;
+    private Future<?> future;
+
+    public int getPriority() {
+        return priority;
+    }
+
+    public void setPriority(int priority) {
+        if (this.priority != priority) {
+            this.priority = priority;
+            if (getLoader() instanceof LruImagePriorityLoader) {
+                // 基于堆实现的优先队列，要更改集合内元素的优先度，得移出后再添加
+                LruImagePriorityLoader loader = (LruImagePriorityLoader) getLoader();
+                if (future != null && !future.isCancelled() && !future.isDone()) {
+                    cancel();
+                    execute();
+                }
+            }
+        }
+    }
 
     private static class OnCompleteHandler extends Handler {
         private LruImageTask task;
@@ -41,24 +74,33 @@ public class LruImageTask implements Runnable {
                         task.listener.onFailure(task.image, (LruImageException) msg.obj);
                     }
                     break;
+                case BITMAP_CANCEL:
+                    if (task.listener != null) {
+                        task.listener.cancel();
+                    }
             }
         }
-
-
     }
 
     public interface OnCompleteListener {
         void onSuccess(LruImage image, Bitmap bitmap);
 
         void onFailure(LruImage image, LruImageException e);
+
+        void cancel();
     }
 
     public OnCompleteListener listener;
 
     public LruImageTask(Context context, LruImage image, OnCompleteListener listener) {
+        this(context, image, DEFAULT_LOADER, listener);
+    }
+
+    public LruImageTask(Context context, LruImage image, ExecutorService loader, OnCompleteListener listener) {
         this.image = image;
         this.context = context;
         this.listener = listener;
+        this.mLoader = loader == null ? DEFAULT_LOADER : loader;
         onCompleteHandler = new OnCompleteHandler(this);
     }
 
@@ -75,19 +117,49 @@ public class LruImageTask implements Runnable {
         }
     }
 
+    public LruImageTask execute() {
+        future = getLoader().submit(this);
+        return this;
+    }
+
+
+    public void cancel(boolean mayInterruptIfRunning) {
+        if (future != null) {
+            if (future.cancel(mayInterruptIfRunning)) {
+                onCompleteHandler.sendMessage(onCompleteHandler.obtainMessage(BITMAP_CANCEL, null));
+            }
+        }
+    }
+
     public void cancel() {
-        cancelled = true;
+        cancel(false);
+    }
+
+    public boolean isCancelled() {
+        return future != null && future.isCancelled();
+    }
+
+    public boolean isDone() {
+        return future != null && future.isDone();
     }
 
     public void complete(Bitmap bitmap) {
-        if (onCompleteHandler != null && !cancelled) {
+        if (onCompleteHandler != null && future != null && !future.isCancelled()) {
             onCompleteHandler.sendMessage(onCompleteHandler.obtainMessage(BITMAP_READY, bitmap));
         }
     }
 
     public void failure(LruImageException exp) {
-        if (onCompleteHandler != null && !cancelled) {
+        if (onCompleteHandler != null && future != null && !future.isCancelled()) {
             onCompleteHandler.sendMessage(onCompleteHandler.obtainMessage(BITMAP_FAILURE, exp));
         }
+    }
+
+    public ExecutorService getLoader() {
+        return mLoader;
+    }
+
+    public void setLoader(ExecutorService loader) {
+        this.mLoader = loader;
     }
 }

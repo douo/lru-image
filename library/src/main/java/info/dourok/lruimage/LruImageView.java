@@ -13,15 +13,7 @@ import java.util.concurrent.Executors;
  */
 public class LruImageView extends ImageView {
 
-    private static final int LOADING_THREADS = 4;
-    private static ExecutorService DEFAULT_EXECUTOR = Executors.newFixedThreadPool(LOADING_THREADS);
 
-    public static void cancelAllTasksInDefaultExecutor() {
-        DEFAULT_EXECUTOR.shutdownNow();
-        DEFAULT_EXECUTOR = Executors.newFixedThreadPool(LOADING_THREADS);
-    }
-
-    private ExecutorService mLoader;
     private LruImageTask currentTask;
 
     public LruImageView(Context context) {
@@ -96,7 +88,7 @@ public class LruImageView extends ImageView {
         }
 
         // Set up the new task
-        currentTask = new LruImageTask(getContext(), image, new LruImageTask.OnCompleteListener() {
+        currentTask = new LruImageTask(getContext(), image, getLoader(), new LruImageTask.OnCompleteListener() {
             @Override
             public void onSuccess(LruImage image, Bitmap bitmap) {
                 setImageBitmap(bitmap);
@@ -114,17 +106,22 @@ public class LruImageView extends ImageView {
                     completeListener.onFailure(image, e);
                 }
             }
+
+            @Override
+            public void cancel() {
+                if (completeListener != null) {
+                    completeListener.cancel();
+                }
+            }
         });
-        getLoader().execute(currentTask);
+        currentTask.execute();
     }
 
 
+    private ExecutorService mLoader;
+
     public ExecutorService getLoader() {
-        if (mLoader == null) {
-            return DEFAULT_EXECUTOR;
-        } else {
-            return mLoader;
-        }
+        return mLoader;
     }
 
     public void setLoader(ExecutorService loader) {
