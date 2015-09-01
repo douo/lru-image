@@ -9,7 +9,7 @@ android {
     resourcePrefix "lruimage__"
     defaultConfig {
         minSdkVersion 14
-        targetSdkVersion 21
+        targetSdkVersion 22
 
         versionCode 1
         versionName version
@@ -24,7 +24,7 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:support-v4:22.0.0'
+    compile 'com.android.support:support-v4:22.2.1'
     compile 'com.jakewharton:disklrucache:2.0.2'
 }
 
