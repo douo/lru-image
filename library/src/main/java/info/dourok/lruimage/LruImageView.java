@@ -3,6 +3,7 @@ package info.dourok.lruimage;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.widget.ImageView;
 
 import java.util.concurrent.ExecutorService;
@@ -83,7 +84,7 @@ public class LruImageView extends ImageView {
 
         // Cancel any existing tasks for this image view
         if (currentTask != null) {
-            currentTask.cancel();
+            currentTask.cancel(true);
             currentTask = null;
         }
 
@@ -109,6 +110,7 @@ public class LruImageView extends ImageView {
 
             @Override
             public void cancel() {
+                d("cancel");
                 if (completeListener != null) {
                     completeListener.cancel();
                 }
@@ -117,6 +119,18 @@ public class LruImageView extends ImageView {
         currentTask.execute();
     }
 
+    @Override
+    protected void onDetachedFromWindow() {
+        d("onDetachedFromWindow");
+        if (currentTask != null) {
+            currentTask.cancel(true);
+        }
+        super.onDetachedFromWindow();
+    }
+
+    private void d(String msg) {
+        Log.d("LruImageView", msg);
+    }
 
     private ExecutorService mLoader;
 

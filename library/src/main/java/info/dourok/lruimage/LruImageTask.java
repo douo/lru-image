@@ -18,6 +18,7 @@ public class LruImageTask implements Runnable {
     private static final int LOADING_THREADS = 4;
 
     private static ExecutorService DEFAULT_LOADER = Executors.newFixedThreadPool(LOADING_THREADS);
+    private boolean cancelled;
 
     public static void cancelAllTasksInDefaultExecutor() {
         DEFAULT_LOADER.shutdownNow();
@@ -118,6 +119,7 @@ public class LruImageTask implements Runnable {
     }
 
     public LruImageTask execute() {
+        cancelled = false;
         future = getLoader().submit(this);
         return this;
     }
@@ -125,9 +127,9 @@ public class LruImageTask implements Runnable {
 
     public void cancel(boolean mayInterruptIfRunning) {
         if (future != null) {
-            if (future.cancel(mayInterruptIfRunning)) {
-                onCompleteHandler.sendMessage(onCompleteHandler.obtainMessage(BITMAP_CANCEL, null));
-            }
+            cancelled = true;
+            future.cancel(mayInterruptIfRunning);
+            onCompleteHandler.sendMessage(onCompleteHandler.obtainMessage(BITMAP_CANCEL, null));
         }
     }
 
@@ -144,13 +146,13 @@ public class LruImageTask implements Runnable {
     }
 
     public void complete(Bitmap bitmap) {
-        if (onCompleteHandler != null && future != null && !future.isCancelled()) {
+        if (onCompleteHandler != null && !cancelled) {
             onCompleteHandler.sendMessage(onCompleteHandler.obtainMessage(BITMAP_READY, bitmap));
         }
     }
 
     public void failure(LruImageException exp) {
-        if (onCompleteHandler != null && future != null && !future.isCancelled()) {
+        if (onCompleteHandler != null && !cancelled) {
             onCompleteHandler.sendMessage(onCompleteHandler.obtainMessage(BITMAP_FAILURE, exp));
         }
     }
