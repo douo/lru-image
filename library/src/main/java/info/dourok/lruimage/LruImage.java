@@ -39,17 +39,30 @@ public abstract class LruImage {
         }
     }
 
+    public final Bitmap getBitmapFromMemory() {
+        LruCache<String, Bitmap> lruCache = getLruCache() == null ? getDefaultLruCache() : getLruCache();
+
+        return lruCache.get(getKey());
+    }
+
+    private void saveBitmapToMemory(Bitmap bitmap) {
+        LruCache<String, Bitmap> lruCache = getLruCache() == null ? getDefaultLruCache() : getLruCache();
+        lruCache.put(getKey(), bitmap);
+    }
 
     public final Bitmap cacheMemory(Context context) throws LruImageException {
-        LruCache<String, Bitmap> lruCache = getLruCache() == null ? getDefaultLruCache() : getLruCache();
-        Bitmap bitmap = lruCache.get(getKey());
+        Bitmap bitmap = getBitmapFromMemory();
         if (bitmap == null) {
             bitmap = loadBitmap(context);
-            if (bitmap != null) {
-                lruCache.put(getKey(), bitmap);
+            if (isValid(bitmap)) {
+                saveBitmapToMemory(bitmap);
             }
         }
         return bitmap;
+    }
+
+    public static boolean isValid(Bitmap bitmap) {
+        return bitmap != null && !bitmap.isRecycled();
     }
 
     public final synchronized Bitmap cacheDisk(Context context) throws LruImageException {
@@ -63,11 +76,15 @@ public abstract class LruImage {
         if (diskLruCache != null) {
             LruCache<String, Bitmap> lruCache = getLruCache() == null ? getDefaultLruCache() : getLruCache();
             Bitmap bitmap = lruCache.get(getKey());
-            if (bitmap == null) {// 如果不在内存里，尝试在储存器缓存里找
+            if (isValid(bitmap)) {
+                Log.d("LruImage", getKey() + " Hit Memory");
+            }
+            if (!isValid(bitmap)) {// 如果不在内存里，尝试在储存器缓存里找
                 try {
                     DiskLruCache.Snapshot snapshot = diskLruCache.get(getKey());
                     if (snapshot != null) {
                         bitmap = BitmapFactory.decodeStream(snapshot.getInputStream(0));
+                        Log.d("LruImage", getKey() + " Hit Disk");
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -75,9 +92,10 @@ public abstract class LruImage {
                     throw new LruImageException(e);
                 }
             }
-            if (bitmap == null) {//如果在储存器里也在找不到，从来源读取
+            if (!isValid(bitmap)) {//如果在储存器里也在找不到，从来源读取
+                Log.d("LruImage", getKey() + " No Hit");
                 bitmap = loadBitmap(context);
-                if (bitmap != null) { //
+                if (isValid(bitmap)) { //
                     lruCache.put(getKey(), bitmap);
                     try {
                         DiskLruCache.Editor editor = diskLruCache.edit(getKey());

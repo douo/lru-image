@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
@@ -117,7 +118,20 @@ public class LruImageTask implements Runnable {
         }
     }
 
+    /**
+     * 如果Bitmap在内存中，直接在当前线程返回
+     *
+     * @return
+     */
     public LruImageTask execute() {
+        if (image != null && image.getCacheLevel() >= LruImage.CACHE_LEVEL_MEMORY_CACHE) {
+            Bitmap bitmap = image.getBitmapFromMemory();
+            if (LruImage.isValid(bitmap)) {
+                Log.d("LruImage", image.getKey() + " Loaded in UI Thread");
+                listener.onSuccess(image, bitmap);
+                return this;
+            }
+        }
         future = getLoader().submit(this);
         return this;
     }

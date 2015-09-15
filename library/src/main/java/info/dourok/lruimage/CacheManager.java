@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Environment;
 import android.support.v4.util.LruCache;
+import android.util.Log;
 
 import com.jakewharton.disklrucache.DiskLruCache;
 
@@ -42,8 +43,12 @@ public class CacheManager {
         mDefaultMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
             @Override
             protected int sizeOf(String key, Bitmap value) {
+
+                int size = value.getByteCount() / 1024;
+                Log.d("LruImage", "sizeOf " + size + " :" + mDefaultMemoryCache.maxSize());
+                return size;
                 //已 kb 为单位
-                return value.getByteCount() / 1024;
+                //return
             }
         };
     }
@@ -95,16 +100,18 @@ public class CacheManager {
     /**
      * 在 CacheManager 初始化 Cache 之前调用
      * 建议在 Application 的 onCreate 中调用。
+     *
      * @param cacheSize
      */
     public void setCacheSize(int cacheSize) {
         this.mCacheSize = cacheSize;
     }
-    public void setDiskCacheFolder(String diskCacheFolder){
+
+    public void setDiskCacheFolder(String diskCacheFolder) {
         this.mDiskCacheFolder = diskCacheFolder;
     }
 
-    public void setDiskCacheMaxSize(int diskCacheMaxSize){
+    public void setDiskCacheMaxSize(int diskCacheMaxSize) {
         this.mDiskCacheMaxSize = diskCacheMaxSize;
     }
 }
