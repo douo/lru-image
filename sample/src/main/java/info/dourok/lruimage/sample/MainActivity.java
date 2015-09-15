@@ -24,7 +24,7 @@ public class MainActivity extends ActionBarActivity {
         LruImageView content = (LruImageView) findViewById(R.id.content);
         final LruImageView avatar = (LruImageView) findViewById(R.id.avatar);
 
-        content.setImageUrl("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg");
+        content.setImageUrl("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg", 200, 200);
 
         LruImageTask task = new LruImageTask(this,
                 new WebImage("http://breadedcat.com/wp-content/gallery/cat-breading/in-bread-cat-11.jpg"),

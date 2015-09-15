@@ -34,6 +34,11 @@ public class LruImageView extends ImageView {
         setImage(new WebImage(url));
     }
 
+    // Helpers to set image by URL
+    public void setImageUrl(String url, int reqWidth, int reqHeight) {
+        setImage(new WebImage(url, reqWidth, reqHeight));
+    }
+
     public void setImageUrl(String url, LruImageTask.OnCompleteListener completeListener) {
         setImage(new WebImage(url), completeListener);
     }
