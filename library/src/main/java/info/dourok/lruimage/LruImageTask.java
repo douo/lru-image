@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
@@ -18,7 +19,6 @@ public class LruImageTask implements Runnable {
     private static final int LOADING_THREADS = 4;
 
     private static ExecutorService DEFAULT_LOADER = Executors.newFixedThreadPool(LOADING_THREADS);
-    private boolean cancelled;
 
     public static void cancelAllTasksInDefaultExecutor() {
         DEFAULT_LOADER.shutdownNow();
@@ -118,8 +118,21 @@ public class LruImageTask implements Runnable {
         }
     }
 
+
+    /**
+     * 如果Bitmap在内存中，直接在当前线程返回
+     *
+     * @return
+     */
     public LruImageTask execute() {
-        cancelled = false;
+        if (image != null && image.getCacheLevel() >= LruImage.CACHE_LEVEL_MEMORY_CACHE) {
+            Bitmap bitmap = image.cacheMemory();
+            if (LruImage.isValid(bitmap)) {
+                Log.d("LruImage", image.getKey() + " Loaded in UI Thread");
+                listener.onSuccess(image, bitmap);
+                return this;
+            }
+        }
         future = getLoader().submit(this);
         return this;
     }
@@ -127,9 +140,9 @@ public class LruImageTask implements Runnable {
 
     public void cancel(boolean mayInterruptIfRunning) {
         if (future != null) {
-            cancelled = true;
-            future.cancel(mayInterruptIfRunning);
-            onCompleteHandler.sendMessage(onCompleteHandler.obtainMessage(BITMAP_CANCEL, null));
+            if (future.cancel(mayInterruptIfRunning)) {
+                onCompleteHandler.sendMessage(onCompleteHandler.obtainMessage(BITMAP_CANCEL, null));
+            }
         }
     }
 
@@ -146,13 +159,13 @@ public class LruImageTask implements Runnable {
     }
 
     public void complete(Bitmap bitmap) {
-        if (onCompleteHandler != null && !cancelled) {
+        if (onCompleteHandler != null && future != null && !future.isCancelled()) {
             onCompleteHandler.sendMessage(onCompleteHandler.obtainMessage(BITMAP_READY, bitmap));
         }
     }
 
     public void failure(LruImageException exp) {
-        if (onCompleteHandler != null && !cancelled) {
+        if (onCompleteHandler != null && future != null && !future.isCancelled()) {
             onCompleteHandler.sendMessage(onCompleteHandler.obtainMessage(BITMAP_FAILURE, exp));
         }
     }
