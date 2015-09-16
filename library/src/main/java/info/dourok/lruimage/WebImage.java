@@ -18,17 +18,30 @@ public class WebImage extends LruImage {
     private static final int CONNECT_TIMEOUT = 5000;
     private static final int READ_TIMEOUT = 10000;
 
+    /**
+     * 当任意一个 reqSize 的值不等于 Integer.MAX_VALUE 则对图片进行 inSampleSize 缩放
+     */
     private int reqWidth = Integer.MAX_VALUE;
     private int reqHeight = Integer.MAX_VALUE;
+    /**
+     * 是否缩小到 reqSize 要求尺寸，false 则比 reqSize 大的最小 inSampleSize 的尺寸
+     * 不会改变图片原有比例
+     */
+    private boolean reqSize;
 
     public WebImage(String url) {
         this.url = url;
     }
 
     public WebImage(String url, int reqWidth, int reqHeight) {
+        this(url, reqWidth, reqHeight, false);
+    }
+
+    public WebImage(String url, int reqWidth, int reqHeight, boolean reqSize) {
         this.url = url;
         this.reqHeight = reqHeight;
         this.reqWidth = reqWidth;
+        this.reqSize = reqSize;
     }
 
 
@@ -57,12 +70,23 @@ public class WebImage extends LruImage {
                 InputStream is = conn.getInputStream();
                 BitmapFactory.decodeStream(is, null, options);
                 is.close();
-                Utils.calculateInSampleSize(options, reqWidth, reqHeight);
+                options.inSampleSize = Utils.calculateInSampleSize(options, reqWidth, reqHeight);
                 options.inJustDecodeBounds = false;
                 conn = newConnection();
                 conn.connect();
                 is = conn.getInputStream();
-                bitmap = BitmapFactory.decodeStream(is, null, options);
+                Bitmap _bitmap = BitmapFactory.decodeStream(is, null, options);
+                if (reqSize && _bitmap.getWidth() > reqWidth && _bitmap.getHeight() > reqHeight) {
+                    //If the specified width and height are the same as the current width and height of
+                    //the source bitmap, the source bitmap is returned and no new bitmap is created.
+                    float scale = Math.max(1.f * reqWidth / _bitmap.getWidth(), 1.f * reqHeight / _bitmap.getHeight());
+                    bitmap = Bitmap.createScaledBitmap(_bitmap, (int) (_bitmap.getWidth() * scale), (int) (_bitmap.getHeight() * scale), false);
+                    if (bitmap != _bitmap) {
+                        _bitmap.recycle();
+                    }
+                } else {
+                    bitmap = _bitmap;
+                }
             } else {
                 URLConnection conn = newConnection();
                 conn.connect();
@@ -84,6 +108,10 @@ public class WebImage extends LruImage {
 
     @Override
     public String getKey() {
-        return Integer.toHexString(url.hashCode());
+
+        String s = reqHeight + url + reqWidth + "_" + (reqSize ? 1 : 0);
+        //return Integer.toHexString(s.hashCode());
+        s = s.replace(":", "_").replace("/", "_").replace(".", "_");
+        return s.substring(s.length() > 64 ? s.length() - 64 : 0, s.length());
     }
 }
