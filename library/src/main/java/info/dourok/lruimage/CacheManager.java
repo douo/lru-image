@@ -43,9 +43,8 @@ public class CacheManager {
         mDefaultMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
             @Override
             protected int sizeOf(String key, Bitmap value) {
-
                 int size = value.getByteCount() / 1024;
-                Log.d("LruImage", "sizeOf " + size + " :" + mDefaultMemoryCache.maxSize());
+                Log.d("LruImage", key + " w:" + value.getWidth() + " h:" + value.getHeight() + "|" + size + " :" + mDefaultMemoryCache.maxSize());
                 return size;
                 //已 kb 为单位
                 //return

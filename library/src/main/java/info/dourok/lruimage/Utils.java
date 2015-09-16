@@ -13,7 +13,7 @@ public class Utils {
         // Raw height and width of image
         final int height = options.outHeight;
         final int width = options.outWidth;
-        System.out.println(width + " " + height);
+        System.out.println("calculateInSampleSize:" + width + " " + height);
         System.out.println(reqWidth + " " + reqHeight);
         int inSampleSize = 1;
 

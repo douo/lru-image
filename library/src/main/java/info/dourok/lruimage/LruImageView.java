@@ -39,6 +39,14 @@ public class LruImageView extends ImageView {
         setImage(new WebImage(url, reqWidth, reqHeight));
     }
 
+    public void setImageUrl(String url, int reqWidth, int reqHeight, boolean reqSize, int cacheLevel) {
+        setImage(new WebImage(url, reqWidth, reqHeight, reqSize, cacheLevel));
+    }
+
+    public void setImageUrl(String url, int reqWidth, int reqHeight, boolean reqSize, int cacheLevel, final Integer fallbackResource, final Integer loadingResource, final LruImageTask.OnCompleteListener completeListener) {
+        setImage(new WebImage(url, reqWidth, reqHeight, reqSize, cacheLevel), fallbackResource, loadingResource, completeListener);
+    }
+
     public void setImageUrl(String url, LruImageTask.OnCompleteListener completeListener) {
         setImage(new WebImage(url), completeListener);
     }
@@ -88,7 +96,7 @@ public class LruImageView extends ImageView {
 
         // Cancel any existing tasks for this image view
         if (currentTask != null) {
-            currentTask.cancel();
+            currentTask.cancel(true);
             currentTask = null;
         }
 

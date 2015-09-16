@@ -12,10 +12,10 @@ import java.io.IOException;
 
 
 public abstract class LruImage {
-    public final static int CACHE_LEVEL_NO_CACHE = -1;
-    public final static int CACHE_LEVEL_MEMORY_CACHE = 0;
-    public final static int CACHE_LEVEL_DISK_CACHE = 1;
-
+    public final static int CACHE_LEVEL_NO_CACHE = 0;
+    public final static int CACHE_LEVEL_MEMORY_CACHE = 0x1;
+    public final static int CACHE_LEVEL_DISK_CACHE = 0x2;
+    private int mCacheLevel = CACHE_LEVEL_MEMORY_CACHE;
     private LruCache<String, Bitmap> mLruCache;
     private DiskLruCache mDiskLruCache;
 
@@ -27,92 +27,89 @@ public abstract class LruImage {
     protected abstract Bitmap loadBitmap(Context context) throws LruImageException;
 
     public final Bitmap getBitmap(Context context) throws LruImageException {
-        switch (getCacheLevel()) {
-            case CACHE_LEVEL_NO_CACHE:
-                return loadBitmap(context);
-            case CACHE_LEVEL_MEMORY_CACHE:
-                return cacheMemory(context);
-            case CACHE_LEVEL_DISK_CACHE:
-                return cacheDisk(context);
-            default:
-                return loadBitmap(context);
-        }
-    }
-
-    public final Bitmap getBitmapFromMemory() {
-        LruCache<String, Bitmap> lruCache = getLruCache() == null ? getDefaultLruCache() : getLruCache();
-
-        return lruCache.get(getKey());
-    }
-
-    private void saveBitmapToMemory(Bitmap bitmap) {
-        LruCache<String, Bitmap> lruCache = getLruCache() == null ? getDefaultLruCache() : getLruCache();
-        lruCache.put(getKey(), bitmap);
-    }
-
-    public final Bitmap cacheMemory(Context context) throws LruImageException {
-        Bitmap bitmap = getBitmapFromMemory();
-        if (bitmap == null) {
-            bitmap = loadBitmap(context);
+        Bitmap bitmap = null;
+        String key = getKey();
+        if (hasUsingMemoryCache()) {
+            bitmap = getBitmapFromMemory(key);
             if (isValid(bitmap)) {
+                Log.d("LruImage", key + " Hit Memory");
+            }
+        }
+        if (!isValid(bitmap)) {
+            if (hasUsingDiskCache()) {
+                bitmap = getBitmapFromDisk(context, key);
+                if (isValid(bitmap)) {
+                    Log.d("LruImage", key + " Hit Disk");
+                }
+            }
+            if (!isValid(bitmap)) {
+                Log.d("LruImage", key + " No Hit");
+                bitmap = loadBitmap(context);
+                if (isValid(bitmap) && hasUsingDiskCache()) {
+                    saveBitmapToDisk(context, bitmap);
+                }
+            }
+            if (isValid(bitmap) && hasUsingMemoryCache()) {
                 saveBitmapToMemory(bitmap);
             }
         }
         return bitmap;
     }
 
-    public static boolean isValid(Bitmap bitmap) {
-        return bitmap != null && !bitmap.isRecycled();
+    protected synchronized final Bitmap getBitmapFromMemory(String key) {
+        LruCache<String, Bitmap> lruCache = getLruCache() == null ? getDefaultLruCache() : getLruCache();
+        return lruCache.get(key);
     }
 
-    public final synchronized Bitmap cacheDisk(Context context) throws LruImageException {
+    public final Bitmap cacheMemory() {
+        Bitmap bitmap = getBitmapFromMemory(getKey());
+        return bitmap;
+    }
 
-        DiskLruCache diskLruCache = null;
+    protected synchronized final void saveBitmapToMemory(Bitmap bitmap) {
+        Log.d("LruImage", "saveBitmapToMemory");
+        LruCache<String, Bitmap> lruCache = getLruCache() == null ? getDefaultLruCache() : getLruCache();
+        lruCache.put(getKey(), bitmap);
+    }
+
+
+    protected final synchronized Bitmap getBitmapFromDisk(Context context, String key) {
+        DiskLruCache diskLruCache;
         try {
             diskLruCache = getDiskLruCache() == null ? getDefaultDiskLruCache(context) : getDiskLruCache();
+            DiskLruCache.Snapshot snapshot = diskLruCache.get(getKey());
+            if (snapshot != null) {
+                return BitmapFactory.decodeStream(snapshot.getInputStream(0));
+            }
+            return null;
         } catch (IOException e) {
             e.printStackTrace();
+            return null;
         }
-        if (diskLruCache != null) {
-            LruCache<String, Bitmap> lruCache = getLruCache() == null ? getDefaultLruCache() : getLruCache();
-            Bitmap bitmap = lruCache.get(getKey());
-            if (isValid(bitmap)) {
-                Log.d("LruImage", getKey() + " Hit Memory");
-            }
-            if (!isValid(bitmap)) {// 如果不在内存里，尝试在储存器缓存里找
-                try {
-                    DiskLruCache.Snapshot snapshot = diskLruCache.get(getKey());
-                    if (snapshot != null) {
-                        bitmap = BitmapFactory.decodeStream(snapshot.getInputStream(0));
-                        Log.d("LruImage", getKey() + " Hit Disk");
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (IllegalArgumentException e) {
-                    throw new LruImageException(e);
-                }
-            }
-            if (!isValid(bitmap)) {//如果在储存器里也在找不到，从来源读取
-                Log.d("LruImage", getKey() + " No Hit");
-                bitmap = loadBitmap(context);
-                if (isValid(bitmap)) { //
-                    lruCache.put(getKey(), bitmap);
-                    try {
-                        DiskLruCache.Editor editor = diskLruCache.edit(getKey());
-                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, editor.newOutputStream(0));
-                        editor.commit();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            } else {
-                lruCache.put(getKey(), bitmap);
-            }
-            return bitmap;
-        } else {
-            Log.w("LruImage", "default DiskLruCache is null");
-            return cacheMemory(context);
+    }
+
+    protected synchronized final boolean saveBitmapToDisk(Context context, Bitmap bitmap) {
+        Log.d("LruImage", "saveBitmapToDisk");
+        try {
+            DiskLruCache diskLruCache = getDiskLruCache() == null ? getDefaultDiskLruCache(context) : getDiskLruCache();
+            DiskLruCache.Editor editor = diskLruCache.edit(getKey());
+
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, editor.newOutputStream(0));
+            editor.commit();
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
         }
+    }
+
+
+    public final Bitmap cacheDisk(Context context) throws LruImageException {
+        return getBitmapFromDisk(context, getKey());
+    }
+
+    public static boolean isValid(Bitmap bitmap) {
+        return bitmap != null && !bitmap.isRecycled();
     }
 
     public DiskLruCache getDefaultDiskLruCache(Context context) throws IOException {
@@ -124,14 +121,30 @@ public abstract class LruImage {
     }
 
     /**
-     * Each key must match the regex [a-z0-9_-]{1,120} as request in disk lru cache
+     * Each key must match the regex [a-z0-9_-]{1,64} as request in disk lru cache
      *
      * @return
      */
     public abstract String getKey();
 
-    public int getCacheLevel() {
-        return CACHE_LEVEL_MEMORY_CACHE;
+    public final int getCacheLevel() {
+        return mCacheLevel;
+    }
+
+    public final void setCacheLevel(int level) {
+        mCacheLevel = level;
+    }
+
+    public final void addCacheLevel(int level) {
+        mCacheLevel |= level;
+    }
+
+    public boolean hasUsingMemoryCache() {
+        return (mCacheLevel & CACHE_LEVEL_MEMORY_CACHE) != 0;
+    }
+
+    public boolean hasUsingDiskCache() {
+        return (mCacheLevel & CACHE_LEVEL_DISK_CACHE) != 0;
     }
 
     /**

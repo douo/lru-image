@@ -6,7 +6,6 @@ import android.graphics.BitmapFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -18,11 +17,12 @@ public class WebImage extends LruImage {
     private static final int CONNECT_TIMEOUT = 5000;
     private static final int READ_TIMEOUT = 10000;
 
+    private final static int NO_REQ_SIZE = Integer.MAX_VALUE;
     /**
-     * 当任意一个 reqSize 的值不等于 Integer.MAX_VALUE 则对图片进行 inSampleSize 缩放
+     * 当任意一个 reqSize 的值不等于 -1 则对图片进行 inSampleSize 缩放
      */
-    private int reqWidth = Integer.MAX_VALUE;
-    private int reqHeight = Integer.MAX_VALUE;
+    private int reqWidth;
+    private int reqHeight;
     /**
      * 是否缩小到 reqSize 要求尺寸，false 则比 reqSize 大的最小 inSampleSize 的尺寸
      * 不会改变图片原有比例
@@ -30,7 +30,11 @@ public class WebImage extends LruImage {
     private boolean reqSize;
 
     public WebImage(String url) {
-        this.url = url;
+        this(url, NO_REQ_SIZE, NO_REQ_SIZE, false);
+    }
+
+    public WebImage(String url, int cacheLevel) {
+        this(url, NO_REQ_SIZE, NO_REQ_SIZE, false, cacheLevel);
     }
 
     public WebImage(String url, int reqWidth, int reqHeight) {
@@ -38,10 +42,15 @@ public class WebImage extends LruImage {
     }
 
     public WebImage(String url, int reqWidth, int reqHeight, boolean reqSize) {
+        this(url, reqWidth, reqHeight, reqSize, CACHE_LEVEL_DISK_CACHE | CACHE_LEVEL_MEMORY_CACHE);
+    }
+    
+    public WebImage(String url, int reqWidth, int reqHeight, boolean reqSize, int cacheLevel) {
         this.url = url;
         this.reqHeight = reqHeight;
         this.reqWidth = reqWidth;
         this.reqSize = reqSize;
+        setCacheLevel(cacheLevel);
     }
 
 
@@ -63,7 +72,7 @@ public class WebImage extends LruImage {
 
             final BitmapFactory.Options options = new BitmapFactory.Options();
 
-            if (reqWidth != Integer.MAX_VALUE || reqHeight != Integer.MAX_VALUE) {
+            if (reqWidth != NO_REQ_SIZE || reqHeight != NO_REQ_SIZE) {
                 options.inJustDecodeBounds = true;
                 URLConnection conn = newConnection();
                 conn.connect();
@@ -99,11 +108,6 @@ public class WebImage extends LruImage {
             throw new LruImageException(e);
         }
         return bitmap;
-    }
-
-    @Override
-    public int getCacheLevel() {
-        return CACHE_LEVEL_DISK_CACHE;
     }
 
     @Override

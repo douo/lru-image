@@ -125,7 +125,7 @@ public class LruImageTask implements Runnable {
      */
     public LruImageTask execute() {
         if (image != null && image.getCacheLevel() >= LruImage.CACHE_LEVEL_MEMORY_CACHE) {
-            Bitmap bitmap = image.getBitmapFromMemory();
+            Bitmap bitmap = image.cacheMemory();
             if (LruImage.isValid(bitmap)) {
                 Log.d("LruImage", image.getKey() + " Loaded in UI Thread");
                 listener.onSuccess(image, bitmap);
