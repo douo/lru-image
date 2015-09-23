@@ -221,8 +221,8 @@ public class VolleyWebImage extends LruImage {
     @Override
     public String getKey() {
         String s = "Volley:" + mMaxWidth + url + mMaxWidth;
-        //return Integer.toHexString(s.hashCode());
-        s = s.replace(":", "_").replace("/", "_").replace(".", "_");
-        return s.substring(s.length() > 64 ? s.length() - 64 : 0, s.length());
+        return Integer.toHexString(s.hashCode());
+        //s = s.replace(":", "_").replace("/", "_").replace(".", "_");
+        //return s.substring(s.length() > 64 ? s.length() - 64 : 0, s.length());
     }
 }
