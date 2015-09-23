@@ -3,6 +3,7 @@ package info.dourok.lruimage;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.widget.ImageView;
 
 import java.util.concurrent.ExecutorService;
@@ -130,6 +131,18 @@ public class LruImageView extends ImageView {
         currentTask.execute();
     }
 
+    @Override
+    protected void onDetachedFromWindow() {
+        d("onDetachedFromWindow");
+        if (currentTask != null) {
+            currentTask.cancel(true);
+        }
+        super.onDetachedFromWindow();
+    }
+
+    private void d(String msg) {
+        Log.d("LruImageView", msg);
+    }
 
     private ExecutorService mLoader;
 

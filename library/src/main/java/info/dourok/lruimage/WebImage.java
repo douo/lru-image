@@ -114,8 +114,8 @@ public class WebImage extends LruImage {
     public String getKey() {
 
         String s = reqHeight + url + reqWidth + "_" + (reqSize ? 1 : 0);
-        //return Integer.toHexString(s.hashCode());
-        s = s.replace(":", "_").replace("/", "_").replace(".", "_");
-        return s.substring(s.length() > 64 ? s.length() - 64 : 0, s.length());
+        return Integer.toHexString(s.hashCode());
+        //s = s.replace(":", "_").replace("/", "_").replace(".", "_");
+        //return s.substring(s.length() > 64 ? s.length() - 64 : 0, s.length());
     }
 }

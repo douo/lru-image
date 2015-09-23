@@ -118,6 +118,7 @@ public class LruImageTask implements Runnable {
         }
     }
 
+
     /**
      * 如果Bitmap在内存中，直接在当前线程返回
      *
