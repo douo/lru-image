@@ -5,14 +5,18 @@ import android.os.Bundle;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ProgressBar;
 
+import info.dourok.lruimage.BufferWebImage;
 import info.dourok.lruimage.LruImage;
 import info.dourok.lruimage.LruImageException;
 import info.dourok.lruimage.LruImageTask;
 import info.dourok.lruimage.LruImageView;
-import info.dourok.lruimage.WebImage;
+import info.dourok.lruimage.sample.progress.CircleProgressDrawable;
+import info.dourok.lruimage.sample.progress.SingleHorizontalProgressDrawable;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -26,8 +30,11 @@ public class MainActivity extends ActionBarActivity {
 
         content.setImageUrl("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg", 200, 200, true, LruImage.CACHE_LEVEL_DISK_CACHE);
 
+        //final SingleHorizontalProgressDrawable drawable = new SingleHorizontalProgressDrawable(this);
+        final CircleProgressDrawable drawable = new CircleProgressDrawable(this);
+        avatar.setImageDrawable(drawable);
         LruImageTask task = new LruImageTask(this,
-                new WebImage("http://breadedcat.com/wp-content/gallery/cat-breading/in-bread-cat-11.jpg"),
+                new BufferWebImage("http://breadedcat.com/wp-content/gallery/cat-breading/in-bread-cat-11.jpg", LruImage.CACHE_LEVEL_MEMORY_CACHE),
                 new LruImageTask.OnCompleteListener() {
                     @Override
                     public void onSuccess(LruImage image, Bitmap bitmap) {
@@ -44,12 +51,20 @@ public class MainActivity extends ActionBarActivity {
                         e.printStackTrace();
                     }
 
+
                     @Override
                     public void cancel() {
                         System.out.println("cancel");
                     }
 
-                }).execute();
+                }, new LruImage.OnProgressUpdateListener() {
+            @Override
+            public void onProgressUpdate(LruImage image, int total, int position) {
+                avatar.setImageLevel((int) (1.f * position / total * 10000));
+                Log.d("LruImage", "progress:" + position + "/" + total);
+            }
+        }).execute();
+        new ProgressBar(this);
     }
 
     @Override
