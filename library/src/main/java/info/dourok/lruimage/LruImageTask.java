@@ -15,7 +15,7 @@ import java.util.concurrent.FutureTask;
 /**
  * Created by charry on 2014/11/20.
  */
-public class LruImageTask implements Runnable {
+public class LruImageTask implements Runnable, LruImage.OnProgressUpdateListener {
     private static final int LOADING_THREADS = 4;
 
     private static ExecutorService DEFAULT_LOADER = Executors.newFixedThreadPool(LOADING_THREADS);
@@ -30,8 +30,10 @@ public class LruImageTask implements Runnable {
     private static final int BITMAP_READY = 0;
     private static final int BITMAP_FAILURE = -1;
     private static final int BITMAP_CANCEL = 1;
+    private static final int PROGRESS = 0x10;
 
     private OnCompleteHandler onCompleteHandler;
+
     private LruImage image;
     private Context context;
     private int priority;
@@ -55,6 +57,7 @@ public class LruImageTask implements Runnable {
         }
     }
 
+
     private static class OnCompleteHandler extends Handler {
         private LruImageTask task;
 
@@ -65,6 +68,11 @@ public class LruImageTask implements Runnable {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
+                case PROGRESS:
+                    if (task.progressListener != null) {
+                        task.progressListener.onProgressUpdate(task.image, msg.arg1, msg.arg2);
+                    }
+                    break;
                 case BITMAP_READY:
                     if (task.listener != null) {
                         task.listener.onSuccess(task.image, (Bitmap) msg.obj);
@@ -79,6 +87,7 @@ public class LruImageTask implements Runnable {
                     if (task.listener != null) {
                         task.listener.cancel();
                     }
+                    break;
             }
         }
     }
@@ -91,18 +100,35 @@ public class LruImageTask implements Runnable {
         void cancel();
     }
 
+
     public OnCompleteListener listener;
 
+    public LruImage.OnProgressUpdateListener progressListener;
+
+
     public LruImageTask(Context context, LruImage image, OnCompleteListener listener) {
-        this(context, image, DEFAULT_LOADER, listener);
+        this(context, image, DEFAULT_LOADER, listener, null);
+    }
+
+    public LruImageTask(Context context, LruImage image, OnCompleteListener listener, LruImage.OnProgressUpdateListener pListener) {
+        this(context, image, DEFAULT_LOADER, listener, pListener);
     }
 
     public LruImageTask(Context context, LruImage image, ExecutorService loader, OnCompleteListener listener) {
+        this(context, image, loader, listener, null);
+    }
+
+    public LruImageTask(Context context, LruImage image, ExecutorService loader, OnCompleteListener listener, LruImage.OnProgressUpdateListener pListener) {
         this.image = image;
         this.context = context;
         this.listener = listener;
         this.mLoader = loader == null ? DEFAULT_LOADER : loader;
         onCompleteHandler = new OnCompleteHandler(this);
+
+        if (pListener != null) {
+            this.progressListener = pListener;
+            image.setProgressListener(this);
+        }
     }
 
     @Override
@@ -169,6 +195,15 @@ public class LruImageTask implements Runnable {
             onCompleteHandler.sendMessage(onCompleteHandler.obtainMessage(BITMAP_FAILURE, exp));
         }
     }
+
+
+    @Override
+    public void onProgressUpdate(LruImage image, int total, int position) {
+        if (onCompleteHandler != null && future != null && !future.isCancelled()) {
+            onCompleteHandler.sendMessage(onCompleteHandler.obtainMessage(PROGRESS, total, position));
+        }
+    }
+
 
     public ExecutorService getLoader() {
         return mLoader;

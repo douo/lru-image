@@ -19,12 +19,20 @@ public abstract class LruImage {
     private LruCache<String, Bitmap> mLruCache;
     private DiskLruCache mDiskLruCache;
 
+    public interface OnProgressUpdateListener {
+        void onProgressUpdate(LruImage image, int total, int position);
+    }
+
+    protected OnProgressUpdateListener progressListener;
+
+
     /**
      * 子类读取原始图片的方法
      *
-     * @return bitmap from source, or null if bitmap can't load.
+     * @return bitmap from source, or null if bitmap can't be load.
      */
     protected abstract Bitmap loadBitmap(Context context) throws LruImageException;
+
 
     public final Bitmap getBitmap(Context context) throws LruImageException {
         Bitmap bitmap = null;
@@ -55,6 +63,17 @@ public abstract class LruImage {
         }
         return bitmap;
     }
+
+    void setProgressListener(OnProgressUpdateListener listener) {
+        this.progressListener = listener;
+    }
+
+    protected void progressUpdate(int total, int position) {
+        if (progressListener != null) {
+            progressListener.onProgressUpdate(this, total, position);
+        }
+    }
+
 
     protected synchronized final Bitmap getBitmapFromMemory(String key) {
         LruCache<String, Bitmap> lruCache = getLruCache() == null ? getDefaultLruCache() : getLruCache();
