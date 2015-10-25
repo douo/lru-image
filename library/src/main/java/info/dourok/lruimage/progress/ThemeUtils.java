@@ -1,4 +1,4 @@
-package info.dourok.lruimage.sample.progress;
+package info.dourok.lruimage.progress;
 
 import android.content.Context;
 import android.content.res.TypedArray;

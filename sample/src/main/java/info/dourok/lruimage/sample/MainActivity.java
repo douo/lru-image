@@ -8,15 +8,14 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ProgressBar;
 
 import info.dourok.lruimage.BufferWebImage;
 import info.dourok.lruimage.LruImage;
 import info.dourok.lruimage.LruImageException;
 import info.dourok.lruimage.LruImageTask;
 import info.dourok.lruimage.LruImageView;
-import info.dourok.lruimage.sample.progress.CircleProgressDrawable;
-import info.dourok.lruimage.sample.progress.SingleHorizontalProgressDrawable;
+import info.dourok.lruimage.progress.CircleProgressDrawable;
+import info.dourok.lruimage.progress.ProgressLruImageView;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -26,10 +25,11 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         LruImageView content = (LruImageView) findViewById(R.id.content);
+        ProgressLruImageView progress = (ProgressLruImageView) findViewById(R.id.progress_demo);
         final LruImageView avatar = (LruImageView) findViewById(R.id.avatar);
 
         content.setImageUrl("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg", 200, 200, true, LruImage.CACHE_LEVEL_DISK_CACHE);
-
+        progress.setImageUrl("http://breadedcat.com/wp-content/gallery/in-bread-cats/breadedgary-de6ead1589f573b4d667461467a6c90480396974.jpg", 200, 200, true, LruImage.CACHE_LEVEL_MEMORY_CACHE);
         //final SingleHorizontalProgressDrawable drawable = new SingleHorizontalProgressDrawable(this);
         final CircleProgressDrawable drawable = new CircleProgressDrawable(this);
         avatar.setImageDrawable(drawable);
@@ -64,7 +64,7 @@ public class MainActivity extends ActionBarActivity {
                 Log.d("LruImage", "progress:" + position + "/" + total);
             }
         }).execute();
-        new ProgressBar(this);
+
     }
 
     @Override

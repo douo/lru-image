@@ -1,17 +1,17 @@
-package info.dourok.lruimage.sample.progress;
+package info.dourok.lruimage.progress;
 
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.Rect;
+import android.graphics.RectF;
 
 /**
  * Created by John on 2015/10/24.
  */
+
 public class CircleProgressDrawable extends ProgressDrawableBase {
     private static final float PROGRESS_RADIOUS = 64f;
     private static final float PROGRESS_WIDTH = 2f;
-    private static final int LEVEL_MAX = 10000;
     private int mIntriniscRadious;
     private int strokeWidth;
     private float mTrackAlpha;
@@ -57,18 +57,20 @@ public class CircleProgressDrawable extends ProgressDrawableBase {
         drawProgressRect(canvas, paint);
     }
 
+    RectF rectF = new RectF();
+
     private void drawTrackRect(Canvas canvas, Paint paint) {
-        Rect bounds = getBounds();
-        canvas.drawArc((float) 0, (float) 0, (float) bounds.width(), (float) bounds.height(), (float) 0, (float) 360, false, paint);
+        rectF.set(getBounds());
+        canvas.drawArc(rectF, -90f, 360.f, false, paint);
     }
 
     private void drawProgressRect(Canvas canvas, Paint paint) {
-        Rect bounds = getBounds();
+        rectF.set(getBounds());
         int level = getLevel();
         if (level == 0) {
             return;
         }
-        canvas.drawArc((float) 0, (float) 0, (float) bounds.width(), (float) bounds.height(), (float) 0, 360.f * (float) level / LEVEL_MAX, false, paint);
+        canvas.drawArc(rectF, -90f, 360.f * level / LEVEL_MAX, false, paint);
 
     }
 }

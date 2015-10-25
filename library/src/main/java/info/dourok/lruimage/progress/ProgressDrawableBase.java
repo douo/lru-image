@@ -3,7 +3,7 @@
  * All Rights Reserved.
  */
 
-package info.dourok.lruimage.sample.progress;
+package info.dourok.lruimage.progress;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
@@ -24,6 +24,7 @@ import android.support.annotation.Nullable;
 public abstract class ProgressDrawableBase extends Drawable
         implements TintableDrawable {
 
+    public static final int LEVEL_MAX = 10000;
     protected boolean mAutoMirrored;
     protected int mAlpha = 0xFF;
     protected ColorFilter mColorFilter;

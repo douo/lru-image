@@ -1,4 +1,4 @@
-package info.dourok.lruimage.sample.progress;
+package info.dourok.lruimage.progress;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -10,7 +10,6 @@ public class SingleHorizontalProgressDrawable extends ProgressDrawableBase {
 
     private static final float PROGRESS_INTRINSIC_HEIGHT_DP = 3.2f;
     private static final RectF RECT_BOUND = new RectF(-180, -1, 180, 1);
-    private static final int LEVEL_MAX = 10000;
 
     private int mProgressIntrinsicHeight;
     private int mProgressIntrinsicWidth;

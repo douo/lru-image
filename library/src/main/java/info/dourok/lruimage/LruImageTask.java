@@ -87,6 +87,8 @@ public class LruImageTask implements Runnable, LruImage.OnProgressUpdateListener
                     if (task.listener != null) {
                         task.listener.cancel();
                     }
+                    task.listener = null;
+                    task.progressListener = null;
                     break;
             }
         }
@@ -169,6 +171,7 @@ public class LruImageTask implements Runnable, LruImage.OnProgressUpdateListener
             if (future.cancel(mayInterruptIfRunning)) {
                 onCompleteHandler.sendMessage(onCompleteHandler.obtainMessage(BITMAP_CANCEL, null));
             }
+
         }
     }
 

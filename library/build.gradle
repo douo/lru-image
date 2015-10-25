@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
-version = "0.0.10"
+version = "0.0.11"
 android {
     compileSdkVersion 22
     buildToolsVersion "22.0.1"
@@ -10,7 +10,7 @@ android {
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 22
-        versionCode 10
+        versionCode 11
         versionName version
     }
     buildTypes {
@@ -41,7 +41,7 @@ install {
 
                 packaging 'aar'
                 // Add your description here
-                name 'Load image to ImageView from url, cache image using LRU Cache ' 	//项目描述
+                name 'Load image to ImageView from url, cache image using LRU Cache '    //项目描述
                 url siteUrl
                 // Set your license
                 licenses {
@@ -52,7 +52,7 @@ install {
                 }
                 developers {
                     developer {
-                        id 'douo'		//填写的一些基本信息
+                        id 'douo'        //填写的一些基本信息
                         name 'DouO'
                         email 'dourokinga@gmail.com'
                     }
@@ -82,7 +82,7 @@ android.libraryVariants.all { variant ->
         exclude '**/BuildConfig.java'
         exclude '**/R.java'
     }
-    task("javadoc${variant.name.capitalize()}Jar",type: Jar, dependsOn: "generate${variant.name.capitalize()}Javadoc"){
+    task("javadoc${variant.name.capitalize()}Jar", type: Jar, dependsOn: "generate${variant.name.capitalize()}Javadoc") {
         classifier = 'javadoc'
         from tasks.getByName("generate${variant.name.capitalize()}Javadoc").destinationDir
     }
@@ -115,7 +115,7 @@ bintray {
     configurations = ['archives']
     pkg {
         repo = "maven"
-        name = "lru-image"	//发布到JCenter上的项目名字
+        name = "lru-image"    //发布到JCenter上的项目名字
         websiteUrl = siteUrl
         vcsUrl = gitUrl
         licenses = ["Apache-2.0"]
