@@ -7,6 +7,7 @@ package info.dourok.lruimage.progress;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
@@ -36,11 +37,16 @@ public abstract class ProgressDrawableBase extends Drawable
 
     public ProgressDrawableBase(Context context) {
         setAutoMirrored(true);
-        int colorControlActivated = ThemeUtils.getColorFromAttrRes(android.R.attr.colorControlActivated,
-                context);
+        try {
+            int colorControlActivated = ThemeUtils.getColorFromAttrRes(android.R.attr.colorControlActivated,
+                    context);
+            setTint(colorControlActivated);
+        } catch (Resources.NotFoundException e) {
+            e.printStackTrace();
+        }
         // setTint() has been overridden for compatibility; DrawableCompat won't work because
         // wrapped Drawable won't be Animatable.
-        setTint(colorControlActivated);
+
     }
 
 
