@@ -96,7 +96,7 @@ public abstract class LruImage {
         DiskLruCache diskLruCache;
         try {
             diskLruCache = getDiskLruCache() == null ? getDefaultDiskLruCache(context) : getDiskLruCache();
-            DiskLruCache.Snapshot snapshot = diskLruCache.get(getKey());
+            DiskLruCache.Snapshot snapshot = diskLruCache.get(key);
             if (snapshot != null) {
                 return BitmapFactory.decodeStream(snapshot.getInputStream(0));
             }
@@ -125,6 +125,23 @@ public abstract class LruImage {
 
     public final Bitmap cacheDisk(Context context) throws LruImageException {
         return getBitmapFromDisk(context, getKey());
+    }
+
+    final boolean isCacheOnDisk(Context context) {
+        DiskLruCache diskLruCache;
+        try {
+            diskLruCache = getDiskLruCache() == null ? getDefaultDiskLruCache(context) : getDiskLruCache();
+            DiskLruCache.Snapshot snapshot = diskLruCache.get(getKey());
+            if (snapshot != null) {
+                snapshot.close();
+                return true;
+            } else {
+                return false;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public static boolean isValid(Bitmap bitmap) {
