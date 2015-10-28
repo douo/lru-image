@@ -6,11 +6,9 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
-import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 
 /**
  * Created by charry on 2014/11/20.
@@ -19,6 +17,7 @@ public class LruImageTask implements Runnable, LruImage.OnProgressUpdateListener
     private static final int LOADING_THREADS = 4;
 
     private static ExecutorService DEFAULT_LOADER = Executors.newFixedThreadPool(LOADING_THREADS);
+    private static ExecutorService DISK_LOADER = Executors.newFixedThreadPool(LOADING_THREADS);
 
     public static void cancelAllTasksInDefaultExecutor() {
         DEFAULT_LOADER.shutdownNow();
@@ -133,17 +132,34 @@ public class LruImageTask implements Runnable, LruImage.OnProgressUpdateListener
         }
     }
 
-    @Override
-    public void run() {
-        if (image != null) {
+
+    private class DiskWorker implements Runnable {
+
+        @Override
+        public void run() {
+            Bitmap bitmap = null;
             try {
-                complete(image.getBitmap(context));
+                bitmap = image.cacheDisk(context);
             } catch (LruImageException e) {
                 e.printStackTrace();
-                failure(e);
             }
-            context = null;
+            if (LruImage.isValid(bitmap)) {
+                complete(bitmap);
+            } else {
+                future = getLoader().submit(LruImageTask.this);
+            }
         }
+    }
+
+    @Override
+    public void run() {
+        try {
+            complete(image.getBitmap(context));
+        } catch (LruImageException e) {
+            e.printStackTrace();
+            failure(e);
+        }
+        context = null;
     }
 
 
@@ -153,15 +169,23 @@ public class LruImageTask implements Runnable, LruImage.OnProgressUpdateListener
      * @return
      */
     public LruImageTask execute() {
-        if (image != null && image.getCacheLevel() >= LruImage.CACHE_LEVEL_MEMORY_CACHE) {
-            Bitmap bitmap = image.cacheMemory();
-            if (LruImage.isValid(bitmap)) {
-                Log.d("LruImage", image.getKey() + " Loaded in UI Thread");
-                listener.onSuccess(image, bitmap);
-                return this;
+        if (image != null) {
+            if (image.getCacheLevel() >= LruImage.CACHE_LEVEL_MEMORY_CACHE) {
+                Bitmap bitmap = image.cacheMemory();
+                if (LruImage.isValid(bitmap)) {
+                    Log.d("LruImage", image.getKey() + " Loaded in UI Thread");
+                    listener.onSuccess(image, bitmap);
+                    return this;
+                }
             }
+            if (image.getCacheLevel() >= LruImage.CACHE_LEVEL_DISK_CACHE) {
+                future = getDiskLoader().submit(new DiskWorker());
+            } else {
+                future = getLoader().submit(new DiskWorker());
+            }
+        } else {
+            throw new NullPointerException("LruImage can not be null");
         }
-        future = getLoader().submit(this);
         return this;
     }
 
@@ -207,6 +231,9 @@ public class LruImageTask implements Runnable, LruImage.OnProgressUpdateListener
         }
     }
 
+    private ExecutorService getDiskLoader() {
+        return DISK_LOADER;
+    }
 
     public ExecutorService getLoader() {
         return mLoader;
