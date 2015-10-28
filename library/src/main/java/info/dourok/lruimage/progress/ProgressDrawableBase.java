@@ -17,9 +17,12 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import info.dourok.lruimage.R;
 
 
 public abstract class ProgressDrawableBase extends Drawable
@@ -38,15 +41,23 @@ public abstract class ProgressDrawableBase extends Drawable
     public ProgressDrawableBase(Context context) {
         setAutoMirrored(true);
         try {
-            int colorControlActivated = ThemeUtils.getColorFromAttrRes(android.R.attr.colorControlActivated,
-                    context);
-            setTint(colorControlActivated);
-        } catch (Resources.NotFoundException e) {
+            setTint(getDefaultTintColor(context));
+        } catch (Exception e) {
             e.printStackTrace();
         }
         // setTint() has been overridden for compatibility; DrawableCompat won't work because
         // wrapped Drawable won't be Animatable.
+    }
 
+    private int getDefaultTintColor(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            return ThemeUtils.getColorFromAttrRes(android.R.attr.colorControlActivated,
+                    context);
+        } else {
+            return ThemeUtils.getColorFromAttrRes(context.getResources()
+                    .getIdentifier("colorControlActivated", "attr", context.getPackageName())
+                    , context);
+        }
     }
 
 
