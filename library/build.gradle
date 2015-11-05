@@ -2,15 +2,15 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
-version = "0.0.12"
+version = "0.0.14"
 android {
-    compileSdkVersion 22
-    buildToolsVersion "22.0.1"
+    compileSdkVersion 23
+    buildToolsVersion "23.0.1"
     resourcePrefix "lruimage__"
     defaultConfig {
         minSdkVersion 14
-        targetSdkVersion 22
-        versionCode 12
+        targetSdkVersion 23
+        versionCode 14
         versionName version
     }
     buildTypes {
