@@ -181,7 +181,7 @@ public class LruImageTask implements Runnable, LruImage.OnProgressUpdateListener
             if (image.getCacheLevel() >= LruImage.CACHE_LEVEL_DISK_CACHE) {
                 future = getDiskLoader().submit(new DiskWorker());
             } else {
-                future = getLoader().submit(new DiskWorker());
+                future = getLoader().submit(this);
             }
         } else {
             throw new NullPointerException("LruImage can not be null");
