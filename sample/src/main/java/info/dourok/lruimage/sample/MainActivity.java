@@ -34,7 +34,7 @@ public class MainActivity extends ActionBarActivity {
         final CircleProgressDrawable drawable = new CircleProgressDrawable(this);
         avatar.setImageDrawable(drawable);
         LruImageTask task = new LruImageTask(this,
-                new BufferWebImage("http://breadedcat.com/wp-content/gallery/cat-breading/in-bread-cat-11.jpg", LruImage.CACHE_LEVEL_MEMORY_CACHE),
+                new BufferWebImage("http://220.231.232.131:8090/business/2c94851b51112f2201511138a8840005.jpg", 4096, 4096, true, LruImage.CACHE_LEVEL_MEMORY_CACHE),
                 new LruImageTask.OnCompleteListener() {
                     @Override
                     public void onSuccess(LruImage image, Bitmap bitmap) {
