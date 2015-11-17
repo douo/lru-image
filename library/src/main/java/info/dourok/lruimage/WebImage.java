@@ -86,10 +86,10 @@ public class WebImage extends LruImage {
                 is = conn.getInputStream();
 
                 Bitmap _bitmap = BitmapFactory.decodeStream(is, null, options);
-                if (reqSize && _bitmap.getWidth() > reqWidth && _bitmap.getHeight() > reqHeight) {
+                if (reqSize && (_bitmap.getWidth() > reqWidth || _bitmap.getHeight() > reqHeight)) {
                     //If the specified width and height are the same as the current width and height of
                     //the source bitmap, the source bitmap is returned and no new bitmap is created.
-                    float scale = Math.max(1.f * reqWidth / _bitmap.getWidth(), 1.f * reqHeight / _bitmap.getHeight());
+                    float scale = Math.min(1.f * reqWidth / _bitmap.getWidth(), 1.f * reqHeight / _bitmap.getHeight());
                     bitmap = Bitmap.createScaledBitmap(_bitmap, (int) (_bitmap.getWidth() * scale), (int) (_bitmap.getHeight() * scale), false);
                     if (bitmap != _bitmap) {
                         _bitmap.recycle();

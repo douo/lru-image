@@ -4,9 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -81,10 +78,10 @@ public class BufferWebImage extends WebImage {
             options.inJustDecodeBounds = false;
 
             Bitmap _bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
-            if (reqSize && _bitmap.getWidth() > reqWidth && _bitmap.getHeight() > reqHeight) {
+            if (reqSize && (_bitmap.getWidth() > reqWidth || _bitmap.getHeight() > reqHeight)) {
                 //If the specified width and height are the same as the current width and height of
                 //the source bitmap, the source bitmap is returned and no new bitmap is created.
-                float scale = Math.max(1.f * reqWidth / _bitmap.getWidth(), 1.f * reqHeight / _bitmap.getHeight());
+                float scale = Math.min(1.f * reqWidth / _bitmap.getWidth(), 1.f * reqHeight / _bitmap.getHeight());
                 bitmap = Bitmap.createScaledBitmap(_bitmap, (int) (_bitmap.getWidth() * scale), (int) (_bitmap.getHeight() * scale), false);
                 if (bitmap != _bitmap) {
                     _bitmap.recycle();
