@@ -21,7 +21,6 @@ public class ProgressLruImageView extends ImageView {
 
     protected LruImageTask currentTask;
 
-
     public ProgressLruImageView(Context context) {
         super(context);
     }
@@ -182,12 +181,6 @@ public class ProgressLruImageView extends ImageView {
         startLoading = false;
     }
 
-    @Override
-    protected void onDetachedFromWindow() {
-        d("onDetachedFromWindow");
-        cancelTaskIfNecessary();
-        super.onDetachedFromWindow();
-    }
 
     private void d(String msg) {
         Log.d("LruImageView", msg);

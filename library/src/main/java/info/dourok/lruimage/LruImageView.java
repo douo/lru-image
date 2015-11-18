@@ -7,7 +7,6 @@ import android.util.Log;
 import android.widget.ImageView;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Created by charry on 2014/11/20.
@@ -129,15 +128,6 @@ public class LruImageView extends ImageView {
             }
         });
         currentTask.execute();
-    }
-
-    @Override
-    protected void onDetachedFromWindow() {
-        d("onDetachedFromWindow");
-        if (currentTask != null) {
-            currentTask.cancel(true);
-        }
-        super.onDetachedFromWindow();
     }
 
     private void d(String msg) {
