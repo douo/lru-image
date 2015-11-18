@@ -104,7 +104,7 @@ public class LruImageView extends ImageView {
         currentTask = new LruImageTask(getContext(), image, getLoader(), new LruImageTask.OnCompleteListener() {
             @Override
             public void onSuccess(LruImage image, Bitmap bitmap) {
-                setImageBitmap(bitmap);
+                setLruBitmap(image, bitmap);
                 if (completeListener != null) {
                     completeListener.onSuccess(image, bitmap);
                 }
@@ -128,6 +128,10 @@ public class LruImageView extends ImageView {
             }
         });
         currentTask.execute();
+    }
+
+    protected void setLruBitmap(LruImage image, Bitmap bitmap) {
+        setImageBitmap(bitmap);
     }
 
     private void d(String msg) {

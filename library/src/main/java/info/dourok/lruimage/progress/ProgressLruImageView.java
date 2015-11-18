@@ -116,7 +116,7 @@ public class ProgressLruImageView extends ImageView {
                     originScaleType = null;
                 }
                 startLoading = false;
-                setImageBitmap(bitmap);
+                setLruBitmap(image, bitmap);
                 if (completeListener != null) {
                     completeListener.onSuccess(image, bitmap);
                 }
@@ -160,11 +160,15 @@ public class ProgressLruImageView extends ImageView {
                     setScaleType(ScaleType.CENTER);
                 }
                 if (total != 0) {
-                    setImageLevel((int) (0.9f * position / total * ProgressDrawableBase.LEVEL_MAX));
+                    setImageLevel((int) (0.99f * position / total * ProgressDrawableBase.LEVEL_MAX));
                 }
             }
         });
         currentTask.execute();
+    }
+
+    protected void setLruBitmap(LruImage image, Bitmap bitmap) {
+        setImageBitmap(bitmap);
     }
 
 
