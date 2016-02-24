@@ -35,6 +35,7 @@ public abstract class LruImage {
 
 
     public final Bitmap getBitmap(Context context) throws LruImageException {
+        Log.d("LruImage", "getBitmap");
         Bitmap bitmap = null;
         String key = getKey();
         if (hasUsingMemoryCache()) {
@@ -82,15 +83,24 @@ public abstract class LruImage {
 
     public final Bitmap cacheMemory() {
         Bitmap bitmap = getBitmapFromMemory(getKey());
+
         return bitmap;
     }
 
     protected synchronized final void saveBitmapToMemory(Bitmap bitmap) {
         Log.d("LruImage", "saveBitmapToMemory");
         LruCache<String, Bitmap> lruCache = getLruCache() == null ? getDefaultLruCache() : getLruCache();
-        lruCache.put(getKey(), bitmap);
+         lruCache.put(getKey(), bitmap);
     }
 
+
+    public final Bitmap cacheDisk(Context context) throws LruImageException {
+        Bitmap bitmap = getBitmapFromDisk(context, getKey());
+        if (isValid(bitmap) && hasUsingMemoryCache()) {
+            saveBitmapToMemory(bitmap);
+        }
+        return bitmap;
+    }
 
     protected final synchronized Bitmap getBitmapFromDisk(Context context, String key) {
         DiskLruCache diskLruCache;
@@ -122,10 +132,6 @@ public abstract class LruImage {
         }
     }
 
-
-    public final Bitmap cacheDisk(Context context) throws LruImageException {
-        return getBitmapFromDisk(context, getKey());
-    }
 
     final boolean isCacheOnDisk(Context context) {
         DiskLruCache diskLruCache;

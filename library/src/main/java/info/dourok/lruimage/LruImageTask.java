@@ -145,6 +145,7 @@ public class LruImageTask implements Runnable, LruImage.OnProgressUpdateListener
             }
             if (LruImage.isValid(bitmap)) {
                 complete(bitmap);
+                Log.d("LruImageTask", image.getKey() + " Loaded from Disk");
             } else {
                 future = getLoader().submit(LruImageTask.this);
             }
@@ -193,7 +194,7 @@ public class LruImageTask implements Runnable, LruImage.OnProgressUpdateListener
     public void cancel(boolean mayInterruptIfRunning) {
         if (future != null) {
             boolean b = future.cancel(mayInterruptIfRunning);
-            Log.d("LruImageTask", "cancel:" + mayInterruptIfRunning + " " + b);
+            Log.v("LruImageTask", "cancel:" + mayInterruptIfRunning + " " + b);
             if (b) {
                 onCompleteHandler.removeMessages(PROGRESS);
                 onCompleteHandler.removeMessages(BITMAP_READY);
@@ -217,7 +218,6 @@ public class LruImageTask implements Runnable, LruImage.OnProgressUpdateListener
     }
 
     public void complete(Bitmap bitmap) {
-        Log.d("LruImageTask", "complete:" + future.isCancelled());
         if (onCompleteHandler != null && future != null && !future.isCancelled()) {
             onCompleteHandler.sendMessage(onCompleteHandler.obtainMessage(BITMAP_READY, bitmap));
         }
