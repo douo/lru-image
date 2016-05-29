@@ -5,16 +5,13 @@ import android.os.Bundle;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ImageView;
 
 import info.dourok.lruimage.LruImage;
 import info.dourok.lruimage.LruImageView;
 import info.dourok.lruimage.LruTaskBuilder;
-import info.dourok.lruimage.ProgressLruImageView;
-import info.dourok.lruimage.VolleyWebImage;
+import info.dourok.lruimage.WebImage;
 import info.dourok.lruimage.progress.CircleProgressDrawable;
 
 
@@ -25,9 +22,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         LruImageView content = (LruImageView) findViewById(R.id.content);
-        ProgressLruImageView progress = (ProgressLruImageView) findViewById(R.id.progress_demo);
+        LruImageView progress = (LruImageView) findViewById(R.id.progress_demo);
         final LruImageView avatar = (LruImageView) findViewById(R.id.avatar);
-        content.setImageUrl("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg", 200, 200, true, LruImage.CACHE_LEVEL_DISK_CACHE);
+        content.setImage(new WebImage.Builder("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg")
+                .setMaxSize(200,200).create());
         progress.setTaskBuilder(new LruTaskBuilder(this).setCacheLevel(LruImage.CACHE_LEVEL_MEMORY_CACHE));
         progress.setImageUrl("http://breadedcat.com/wp-content/gallery/in-bread-cats/breadedgary-de6ead1589f573b4d667461467a6c90480396974.jpg");
 
@@ -42,15 +40,16 @@ public class MainActivity extends AppCompatActivity {
                         drawable.setAntiAlias(true);
                         drawable.setCornerRadius(drawable.getIntrinsicWidth() / 2);
                         avatar.setImageDrawable(drawable);
-                        bitmap.recycle();
+//                        bitmap.recycle();
                     }
                 }).progress(new LruImage.OnProgressUpdateListener() {
             @Override
             public void onProgressUpdate(LruImage image, int total, int position) {
                 avatar.setImageLevel((int) (1.f * position / total * 10000));
-                Log.d("LruImage", "progress:" + position + "/" + total);
+//                Log.d("LruImage", "progress:" + position + "/" + total);
             }
-        }).execute(new VolleyWebImage("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg", 4096, 4096, ImageView.ScaleType.CENTER, null));
+        }).execute(new WebImage.Builder("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg")
+                .setMaxSize(4096, 4096).create());
 
     }
 

@@ -3,12 +3,12 @@ package info.dourok.lruimage.sample.list;
 import android.content.Context;
 import android.util.AttributeSet;
 
-import info.dourok.lruimage.ProgressLruImageView;
+import info.dourok.lruimage.LruImageView;
 
 /**
  * Created by John on 2015/11/18.
  */
-public class SquareImageView extends ProgressLruImageView {
+public class SquareImageView extends LruImageView {
     public SquareImageView(Context context) {
         super(context);
     }

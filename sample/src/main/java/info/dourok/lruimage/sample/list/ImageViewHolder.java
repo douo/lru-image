@@ -4,19 +4,19 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
 
-import info.dourok.lruimage.ProgressLruImageView;
+import info.dourok.lruimage.LruImageView;
 import info.dourok.lruimage.sample.R;
 
 /**
  * Created by John on 2015/11/16.
  */
 public class ImageViewHolder extends RecyclerView.ViewHolder {
-    ProgressLruImageView imageView;
+    LruImageView imageView;
     TextView textView;
 
     public ImageViewHolder(View itemView) {
         super(itemView);
-        imageView = (ProgressLruImageView) itemView.findViewById(R.id.image);
+        imageView = (LruImageView) itemView.findViewById(R.id.image);
         textView = (TextView) itemView.findViewById(R.id.index);
     }
 
