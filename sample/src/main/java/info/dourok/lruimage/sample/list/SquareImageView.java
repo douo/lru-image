@@ -3,7 +3,7 @@ package info.dourok.lruimage.sample.list;
 import android.content.Context;
 import android.util.AttributeSet;
 
-import info.dourok.lruimage.progress.ProgressLruImageView;
+import info.dourok.lruimage.ProgressLruImageView;
 
 /**
  * Created by John on 2015/11/18.

@@ -14,21 +14,49 @@ import java.io.File;
 import java.io.IOException;
 
 /**
+ * 用于配置默认 Cache
  * Created by charry on 2014/11/20.
  */
-public class CacheManager {
+public class LruCacheManager {
+    private static volatile LruCacheManager singleton;
     private LruCache<String, Bitmap> mDefaultMemoryCache;
     private DiskLruCache mDefaultDiskCache;
-    private static CacheManager singleton;
     private int mCacheSize;
     private String mDiskCacheFolder = "info.dourok.lruimage";
     private int mDiskCacheMaxSize = 50 * 1024 * 1024;
 
-    public static CacheManager getInstance() {
+    public static LruCacheManager getInstance() {
         if (singleton == null) {
-            singleton = new CacheManager();
+            synchronized (LruCacheManager.class) {
+                if (singleton == null) {
+                    singleton = new LruCacheManager();
+                }
+            }
         }
         return singleton;
+    }
+
+    public static int getAppVersion(Context context) {
+        try {
+            PackageInfo info = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+            return info.versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return 1;
+    }
+
+    // Creates a unique subdirectory of the designated app cache directory. Tries to use external
+// but if not mounted, falls back on internal storage.
+    public static File getDiskCacheDir(Context context, String uniqueName) {
+        // Check if media is mounted or storage is built-in, if so, try and use external cache dir
+        // otherwise use internal cache dir
+        final String cachePath =
+                Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()) ||
+                        !Environment.isExternalStorageRemovable() ? context.getExternalCacheDir().getPath() :
+                        context.getCacheDir().getPath();
+
+        return new File(cachePath + File.separator + uniqueName);
     }
 
     private void initDefaultMemoryCache() {
@@ -57,7 +85,6 @@ public class CacheManager {
                 getAppVersion(context), 1, mDiskCacheMaxSize);
     }
 
-
     public LruCache<String, Bitmap> getDefaultMemoryCache() {
         if (mDefaultMemoryCache == null) {
             initDefaultMemoryCache();
@@ -72,32 +99,8 @@ public class CacheManager {
         return mDefaultDiskCache;
     }
 
-    public static int getAppVersion(Context context) {
-        try {
-            PackageInfo info = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
-            return info.versionCode;
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-        return 1;
-    }
-
-    // Creates a unique subdirectory of the designated app cache directory. Tries to use external
-// but if not mounted, falls back on internal storage.
-    public static File getDiskCacheDir(Context context, String uniqueName) {
-        // Check if media is mounted or storage is built-in, if so, try and use external cache dir
-        // otherwise use internal cache dir
-        final String cachePath =
-                Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()) ||
-                        !Environment.isExternalStorageRemovable() ? context.getExternalCacheDir().getPath() :
-                        context.getCacheDir().getPath();
-
-        return new File(cachePath + File.separator + uniqueName);
-    }
-
-
     /**
-     * 在 CacheManager 初始化 Cache 之前调用
+     * 在 LruCacheManager 初始化 Cache 之前调用
      * 建议在 Application 的 onCreate 中调用。
      *
      * @param cacheSize

@@ -12,8 +12,8 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".MainActivity"
-            android:label="@string/title_activity_main">
-
+            android:label="@string/title_activity_main"
+            android:exported="true">
         </activity>
         <activity
             android:name=".list.ScrollingActivity"

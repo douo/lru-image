@@ -11,10 +11,11 @@ import java.util.concurrent.ExecutorService;
 /**
  * Created by charry on 2014/11/20.
  */
+@Deprecated
 public class LruImageView extends ImageView {
 
-
     protected LruImageTask currentTask;
+    protected ExecutorService mLoader;
 
     public LruImageView(Context context) {
         super(context);
@@ -24,10 +25,10 @@ public class LruImageView extends ImageView {
         super(context, attrs);
     }
 
+
     public LruImageView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
     }
-
 
     // Helpers to set image by URL
     public void setImageUrl(String url) {
@@ -100,23 +101,22 @@ public class LruImageView extends ImageView {
             currentTask = null;
         }
 
-        // Set up the new task
-        currentTask = new LruImageTask(getContext(), image, getLoader(), new LruImageTask.OnCompleteListener() {
+        new LruTaskBuilder(getContext()).setImageLoader(getLoader()).setOnCompleteListener(new LruImageTask.OnCompleteListener() {
             @Override
-            public void onSuccess(LruImage image, Bitmap bitmap) {
+            public void onSuccess(Bitmap bitmap) {
                 setLruBitmap(image, bitmap);
                 if (completeListener != null) {
-                    completeListener.onSuccess(image, bitmap);
+                    completeListener.onSuccess(bitmap);
                 }
             }
 
             @Override
-            public void onFailure(LruImage image, LruImageException e) {
+            public void onFailure(LruImageException e) {
                 if (fallbackResource != null) {
                     setImageResource(fallbackResource);
                 }
                 if (completeListener != null) {
-                    completeListener.onFailure(image, e);
+                    completeListener.onFailure(e);
                 }
             }
 
@@ -126,8 +126,7 @@ public class LruImageView extends ImageView {
                     completeListener.cancel();
                 }
             }
-        });
-        currentTask.execute();
+        }).execute(image);
     }
 
     protected void setLruBitmap(LruImage image, Bitmap bitmap) {
@@ -137,8 +136,6 @@ public class LruImageView extends ImageView {
     private void d(String msg) {
         Log.d("LruImageView", msg);
     }
-
-    protected ExecutorService mLoader;
 
     public ExecutorService getLoader() {
         return mLoader;

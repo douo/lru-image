@@ -14,6 +14,7 @@ import java.net.URLConnection;
  * 支持 Progress
  * 会见整张图片的字节读取到内存中
  */
+@Deprecated
 public class BufferWebImage extends WebImage {
     public BufferWebImage(String url) {
         this(url, NO_REQ_SIZE, NO_REQ_SIZE, false);

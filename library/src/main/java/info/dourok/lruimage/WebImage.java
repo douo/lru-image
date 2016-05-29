@@ -10,14 +10,16 @@ import java.net.URL;
 import java.net.URLConnection;
 
 /**
+ * 过时，多线程下可能 OOM
+ * 请求请求两次，第一次获取 Image Bounds
+ * 第二次才是正式加载，好处是降低内存使用。坏处是需要两次网络请求，同时不利于计算 progress。
  * Created by charry on 2014/11/18.
  */
+@Deprecated
 public class WebImage extends LruImage {
-    private String url;
+    protected final static int NO_REQ_SIZE = Integer.MAX_VALUE;
     private static final int CONNECT_TIMEOUT = 5000;
     private static final int READ_TIMEOUT = 10000;
-
-    protected final static int NO_REQ_SIZE = Integer.MAX_VALUE;
     /**
      * 当任意一个 reqSize 的值不等于 -1 则对图片进行 inSampleSize 缩放
      */
@@ -28,6 +30,7 @@ public class WebImage extends LruImage {
      * 不会改变图片原有比例
      */
     protected boolean reqSize;
+    private String url;
 
     public WebImage(String url) {
         this(url, NO_REQ_SIZE, NO_REQ_SIZE, false);
@@ -50,7 +53,6 @@ public class WebImage extends LruImage {
         this.reqHeight = reqHeight;
         this.reqWidth = reqWidth;
         this.reqSize = reqSize;
-        setCacheLevel(cacheLevel);
     }
 
 

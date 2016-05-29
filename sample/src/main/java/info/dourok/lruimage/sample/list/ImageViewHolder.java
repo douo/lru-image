@@ -4,7 +4,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
 
-import info.dourok.lruimage.progress.ProgressLruImageView;
+import info.dourok.lruimage.ProgressLruImageView;
 import info.dourok.lruimage.sample.R;
 
 /**

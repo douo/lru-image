@@ -4,21 +4,21 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
 
-import info.dourok.lruimage.BufferWebImage;
 import info.dourok.lruimage.LruImage;
-import info.dourok.lruimage.LruImageException;
-import info.dourok.lruimage.LruImageTask;
 import info.dourok.lruimage.LruImageView;
+import info.dourok.lruimage.LruTaskBuilder;
+import info.dourok.lruimage.ProgressLruImageView;
+import info.dourok.lruimage.VolleyWebImage;
 import info.dourok.lruimage.progress.CircleProgressDrawable;
-import info.dourok.lruimage.progress.ProgressLruImageView;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,17 +27,16 @@ public class MainActivity extends ActionBarActivity {
         LruImageView content = (LruImageView) findViewById(R.id.content);
         ProgressLruImageView progress = (ProgressLruImageView) findViewById(R.id.progress_demo);
         final LruImageView avatar = (LruImageView) findViewById(R.id.avatar);
-
         content.setImageUrl("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg", 200, 200, true, LruImage.CACHE_LEVEL_DISK_CACHE);
-        progress.setImageUrl("http://breadedcat.com/wp-content/gallery/in-bread-cats/breadedgary-de6ead1589f573b4d667461467a6c90480396974.jpg", 200, 200, true, LruImage.CACHE_LEVEL_MEMORY_CACHE);
-        //final SingleHorizontalProgressDrawable drawable = new SingleHorizontalProgressDrawable(this);
+        progress.setTaskBuilder(new LruTaskBuilder(this).setCacheLevel(LruImage.CACHE_LEVEL_MEMORY_CACHE));
+        progress.setImageUrl("http://breadedcat.com/wp-content/gallery/in-bread-cats/breadedgary-de6ead1589f573b4d667461467a6c90480396974.jpg");
+
         final CircleProgressDrawable drawable = new CircleProgressDrawable(this);
         avatar.setImageDrawable(drawable);
-        LruImageTask task = new LruImageTask(this,
-                new BufferWebImage("http://220.231.232.131:8090/business/2c94851b51112f2201511138a8840005.jpg", 4096, 4096, true, LruImage.CACHE_LEVEL_MEMORY_CACHE),
-                new LruImageTask.OnCompleteListener() {
+        new LruTaskBuilder(this).
+                success(new LruTaskBuilder.SuccessCallback() {
                     @Override
-                    public void onSuccess(LruImage image, Bitmap bitmap) {
+                    public void call(Bitmap bitmap) {
                         int size = Math.min(bitmap.getWidth(), bitmap.getHeight());
                         RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), Bitmap.createScaledBitmap(bitmap, size, size, false));
                         drawable.setAntiAlias(true);
@@ -45,25 +44,13 @@ public class MainActivity extends ActionBarActivity {
                         avatar.setImageDrawable(drawable);
                         bitmap.recycle();
                     }
-
-                    @Override
-                    public void onFailure(LruImage image, LruImageException e) {
-                        e.printStackTrace();
-                    }
-
-
-                    @Override
-                    public void cancel() {
-                        System.out.println("cancel");
-                    }
-
-                }, new LruImage.OnProgressUpdateListener() {
+                }).progress(new LruImage.OnProgressUpdateListener() {
             @Override
             public void onProgressUpdate(LruImage image, int total, int position) {
                 avatar.setImageLevel((int) (1.f * position / total * 10000));
                 Log.d("LruImage", "progress:" + position + "/" + total);
             }
-        }).execute();
+        }).execute(new VolleyWebImage("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg", 4096, 4096, ImageView.ScaleType.CENTER, null));
 
     }
 

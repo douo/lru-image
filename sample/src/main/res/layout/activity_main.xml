@@ -22,7 +22,7 @@
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"/>
 
-    <info.dourok.lruimage.progress.ProgressLruImageView
+    <info.dourok.lruimage.ProgressLruImageView
         android:id="@+id/progress_demo"
         android:layout_width="144dp"
         android:layout_height="144dp"/>

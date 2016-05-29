@@ -7,42 +7,46 @@ import android.os.Message;
 import android.util.Log;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
  * Created by charry on 2014/11/20.
  */
 public class LruImageTask implements Runnable, LruImage.OnProgressUpdateListener {
-    private static final int LOADING_THREADS = 4;
-
-    private static ExecutorService DEFAULT_LOADER = Executors.newFixedThreadPool(LOADING_THREADS);
-    private static ExecutorService DISK_LOADER = Executors.newFixedThreadPool(LOADING_THREADS);
-
-    public static void cancelAllTasksInDefaultExecutor() {
-        DEFAULT_LOADER.shutdownNow();
-        DEFAULT_LOADER = Executors.newFixedThreadPool(LOADING_THREADS);
-    }
-
-    private ExecutorService mLoader;
 
     private static final int BITMAP_READY = 0;
     private static final int BITMAP_FAILURE = -1;
     private static final int BITMAP_CANCEL = 1;
     private static final int PROGRESS = 0x10;
-
+    public OnCompleteListener listener;
+    public LruImage.OnProgressUpdateListener progressListener;
+    private ExecutorService mImageLoader;
+    private ExecutorService mDiskCacheLoader;
     private OnCompleteHandler onCompleteHandler;
-
     private LruImage image;
     private Context context;
-    private int priority;
     private Future<?> future;
+    private int priority;
 
-    public int getPriority() {
+
+    public LruImageTask(Context context, LruImage image, ExecutorService loader, ExecutorService diskLoader, OnCompleteListener listener, LruImage.OnProgressUpdateListener pListener) {
+        this.image = image;
+        this.context = context;
+        this.listener = listener;
+        this.mImageLoader = loader;
+        this.mDiskCacheLoader = diskLoader;
+        onCompleteHandler = new OnCompleteHandler(this);
+        if (pListener != null) {
+            this.progressListener = pListener;
+            image.setProgressListener(this);
+        }
+    }
+
+    /*public*/ int getPriority() {
         return priority;
     }
 
-    public void setPriority(int priority) {
+    /*public*/ void setPriority(int priority) {
         if (this.priority != priority) {
             this.priority = priority;
             if (getLoader() instanceof LruImagePriorityLoader) {
@@ -52,102 +56,6 @@ public class LruImageTask implements Runnable, LruImage.OnProgressUpdateListener
                     cancel();
                     execute();
                 }
-            }
-        }
-    }
-
-
-    private static class OnCompleteHandler extends Handler {
-        private LruImageTask task;
-
-        private OnCompleteHandler(LruImageTask task) {
-            this.task = task;
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case PROGRESS:
-                    if (task.progressListener != null) {
-                        task.progressListener.onProgressUpdate(task.image, msg.arg1, msg.arg2);
-                    }
-                    break;
-                case BITMAP_READY:
-                    if (task.listener != null) {
-                        task.listener.onSuccess(task.image, (Bitmap) msg.obj);
-                    }
-                    break;
-                case BITMAP_FAILURE:
-                    if (task.listener != null) {
-                        task.listener.onFailure(task.image, (LruImageException) msg.obj);
-                    }
-                    break;
-                case BITMAP_CANCEL:
-                    if (task.listener != null) {
-                        task.listener.cancel();
-                    }
-                    task.listener = null;
-                    task.progressListener = null;
-                    break;
-            }
-        }
-    }
-
-    public interface OnCompleteListener {
-        void onSuccess(LruImage image, Bitmap bitmap);
-
-        void onFailure(LruImage image, LruImageException e);
-
-        void cancel();
-    }
-
-
-    public OnCompleteListener listener;
-
-    public LruImage.OnProgressUpdateListener progressListener;
-
-
-    public LruImageTask(Context context, LruImage image, OnCompleteListener listener) {
-        this(context, image, DEFAULT_LOADER, listener, null);
-    }
-
-    public LruImageTask(Context context, LruImage image, OnCompleteListener listener, LruImage.OnProgressUpdateListener pListener) {
-        this(context, image, DEFAULT_LOADER, listener, pListener);
-    }
-
-    public LruImageTask(Context context, LruImage image, ExecutorService loader, OnCompleteListener listener) {
-        this(context, image, loader, listener, null);
-    }
-
-    public LruImageTask(Context context, LruImage image, ExecutorService loader, OnCompleteListener listener, LruImage.OnProgressUpdateListener pListener) {
-        this.image = image;
-        this.context = context;
-        this.listener = listener;
-        this.mLoader = loader == null ? DEFAULT_LOADER : loader;
-        onCompleteHandler = new OnCompleteHandler(this);
-
-        if (pListener != null) {
-            this.progressListener = pListener;
-            image.setProgressListener(this);
-        }
-    }
-
-
-    private class DiskWorker implements Runnable {
-
-        @Override
-        public void run() {
-            Bitmap bitmap = null;
-            try {
-                bitmap = image.cacheDisk(context);
-            } catch (LruImageException e) {
-                e.printStackTrace();
-            }
-            if (LruImage.isValid(bitmap)) {
-                complete(bitmap);
-                Log.d("LruImageTask", image.getKey() + " Loaded from Disk");
-            } else {
-                future = getLoader().submit(LruImageTask.this);
             }
         }
     }
@@ -163,7 +71,6 @@ public class LruImageTask implements Runnable, LruImage.OnProgressUpdateListener
         context = null;
     }
 
-
     /**
      * 如果Bitmap在内存中，直接在当前线程返回
      *
@@ -171,15 +78,15 @@ public class LruImageTask implements Runnable, LruImage.OnProgressUpdateListener
      */
     public LruImageTask execute() {
         if (image != null) {
-            if (image.getCacheLevel() >= LruImage.CACHE_LEVEL_MEMORY_CACHE) {
+            if (image.isUsingMemoryCache()) {
                 Bitmap bitmap = image.cacheMemory();
                 if (LruImage.isValid(bitmap)) {
                     Log.d("LruImage", image.getKey() + " Loaded in UI Thread");
-                    listener.onSuccess(image, bitmap);
+                    listener.onSuccess(bitmap);
                     return this;
                 }
             }
-            if (image.getCacheLevel() >= LruImage.CACHE_LEVEL_DISK_CACHE) {
+            if (image.isUsingDiskCache()) {
                 future = getDiskLoader().submit(new DiskWorker());
             } else {
                 future = getLoader().submit(this);
@@ -189,7 +96,6 @@ public class LruImageTask implements Runnable, LruImage.OnProgressUpdateListener
         }
         return this;
     }
-
 
     public void cancel(boolean mayInterruptIfRunning) {
         if (future != null) {
@@ -229,7 +135,6 @@ public class LruImageTask implements Runnable, LruImage.OnProgressUpdateListener
         }
     }
 
-
     @Override
     public void onProgressUpdate(LruImage image, int total, int position) {
         if (onCompleteHandler != null && future != null && !future.isCancelled()) {
@@ -238,14 +143,77 @@ public class LruImageTask implements Runnable, LruImage.OnProgressUpdateListener
     }
 
     private ExecutorService getDiskLoader() {
-        return DISK_LOADER;
+        return mDiskCacheLoader;
     }
 
     public ExecutorService getLoader() {
-        return mLoader;
+        return mImageLoader;
     }
 
-    public void setLoader(ExecutorService loader) {
-        this.mLoader = loader;
+    public LruImage getImage() {
+        return image;
+    }
+
+    public interface OnCompleteListener {
+        void onSuccess(Bitmap bitmap);
+
+        void onFailure(LruImageException e);
+
+        void cancel();
+    }
+
+    private static class OnCompleteHandler extends Handler {
+        private LruImageTask task;
+
+        private OnCompleteHandler(LruImageTask task) {
+            this.task = task;
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case PROGRESS:
+                    if (task.progressListener != null) {
+                        task.progressListener.onProgressUpdate(task.image, msg.arg1, msg.arg2);
+                    }
+                    break;
+                case BITMAP_READY:
+                    if (task.listener != null) {
+                        task.listener.onSuccess((Bitmap) msg.obj);
+                    }
+                    break;
+                case BITMAP_FAILURE:
+                    if (task.listener != null) {
+                        task.listener.onFailure((LruImageException) msg.obj);
+                    }
+                    break;
+                case BITMAP_CANCEL:
+                    if (task.listener != null) {
+                        task.listener.cancel();
+                    }
+                    task.listener = null;
+                    task.progressListener = null;
+                    break;
+            }
+        }
+    }
+
+    private class DiskWorker implements Runnable {
+
+        @Override
+        public void run() {
+            Bitmap bitmap = null;
+            try {
+                bitmap = image.cacheDisk();
+            } catch (LruImageException e) {
+                e.printStackTrace();
+            }
+            if (LruImage.isValid(bitmap)) {
+                complete(bitmap);
+                Log.d("LruImageTask", image.getKey() + " Loaded from Disk");
+            } else {
+                future = getLoader().submit(LruImageTask.this);
+            }
+        }
     }
 }
