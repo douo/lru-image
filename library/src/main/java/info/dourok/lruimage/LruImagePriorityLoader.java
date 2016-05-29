@@ -3,7 +3,6 @@ package info.dourok.lruimage;
 import android.os.Build;
 
 import java.util.Comparator;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
@@ -13,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by John on 2015/9/1.
  */
-public class LruImagePriorityLoader extends ThreadPoolExecutor {
+/*public*/ class LruImagePriorityLoader extends ThreadPoolExecutor {
     private static final int LOADING_THREADS = 4;
 
     public LruImagePriorityLoader(int corePoolSize,
