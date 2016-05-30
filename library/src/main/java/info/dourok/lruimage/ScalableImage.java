@@ -129,34 +129,35 @@ public abstract class ScalableImage extends LruImage {
     @Override
     protected final Bitmap loadBitmap(Context context) throws LruImageException {
         try {
-            prepareData();
+            prepareData(context);
             synchronized (sDecodeLock) {
-                return doParse();
+                return doParse(context);
             }
         } catch (IOException e) {
             throw new LruImageException(e);
         }
     }
 
-    protected abstract void prepareData() throws IOException;
+    protected abstract void prepareData(Context context) throws IOException;
 
-    protected abstract Bitmap decodingBitmap(BitmapFactory.Options decodeOptions);
+    protected abstract Bitmap decodingBitmap(Context context, BitmapFactory.Options decodeOptions) throws IOException;
 
     protected abstract void onDecodeFinish();
 
     /**
      * The real guts of parseNetworkResponse. Broken out for readability.
+     * @param context
      */
-    private Bitmap doParse() throws IOException {
+    private Bitmap doParse(Context context) throws IOException {
         BitmapFactory.Options decodeOptions = new BitmapFactory.Options();
         Bitmap bitmap = null;
         if (mMaxWidth == 0 && mMaxHeight == 0) {
             decodeOptions.inPreferredConfig = mDecodeConfig;
-            bitmap = decodingBitmap(decodeOptions);
+            bitmap = decodingBitmap(context, decodeOptions);
         } else {
             // If we have to resize this image, first get the natural bounds.
             decodeOptions.inJustDecodeBounds = true;
-            decodingBitmap(decodeOptions);
+            decodingBitmap(context,decodeOptions);
             int actualWidth = decodeOptions.outWidth;
             int actualHeight = decodeOptions.outHeight;
 
@@ -172,7 +173,7 @@ public abstract class ScalableImage extends LruImage {
             // decodeOptions.inPreferQualityOverSpeed = PREFER_QUALITY_OVER_SPEED;
             decodeOptions.inSampleSize =
                     findBestSampleSize(actualWidth, actualHeight, desiredWidth, desiredHeight);
-            Bitmap tempBitmap = decodingBitmap(decodeOptions);
+            Bitmap tempBitmap = decodingBitmap(context, decodeOptions);
 
             // If necessary, scale down to the maximal acceptable size.
             if (tempBitmap != null && (tempBitmap.getWidth() > desiredWidth ||

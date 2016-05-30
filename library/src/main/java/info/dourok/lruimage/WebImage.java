@@ -1,5 +1,6 @@
 package info.dourok.lruimage;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
@@ -49,7 +50,7 @@ public class WebImage extends ScalableImage {
     }
 
     @Override
-    protected void prepareData() throws IOException {
+    protected void prepareData(Context context) throws IOException {
         URLConnection conn = newConnection();
         conn.connect();
         InputStream is = conn.getInputStream();
@@ -68,7 +69,7 @@ public class WebImage extends ScalableImage {
     }
 
     @Override
-    protected Bitmap decodingBitmap(BitmapFactory.Options decodeOptions) {
+    protected Bitmap decodingBitmap(Context context, BitmapFactory.Options decodeOptions) {
         return BitmapFactory.decodeByteArray(tempData, 0, tempData.length, decodeOptions);
     }
 

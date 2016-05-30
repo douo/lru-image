@@ -1,5 +1,6 @@
 package info.dourok.lruimage;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.widget.ImageView;
@@ -26,12 +27,12 @@ public class FileImage extends ScalableImage {
     }
 
     @Override
-    protected void prepareData() throws IOException {
+    protected void prepareData(Context context) throws IOException {
 
     }
 
     @Override
-    protected Bitmap decodingBitmap(BitmapFactory.Options decodeOptions) {
+    protected Bitmap decodingBitmap(Context context, BitmapFactory.Options decodeOptions) {
         return BitmapFactory.decodeFile(filePath, decodeOptions);
     }
 
