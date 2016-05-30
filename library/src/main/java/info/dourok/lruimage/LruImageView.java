@@ -1,7 +1,9 @@
 package info.dourok.lruimage;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.DrawableRes;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -25,20 +27,31 @@ public class LruImageView extends ImageView {
     private boolean startLoading;
     private LruTaskBuilder mBuilder;
 
-    private ProgressDrawableBase mProgressDrawable;
+    private Drawable mProgressDrawable;
     @DrawableRes
     private int mFallbackResource;
 
     public LruImageView(Context context) {
-        super(context);
+        this(context,null,0);
     }
 
     public LruImageView(Context context, AttributeSet attrs) {
-        super(context, attrs);
+        this(context, attrs,0);
     }
 
     public LruImageView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+        if(attrs!=null){
+            TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.lruimage__LruImageView, 0, 0);
+            try {
+                mFallbackResource = ta.getResourceId(R.styleable.lruimage__LruImageView_fallbackDrawable,0);
+                mProgressDrawable = ta.getDrawable(R.styleable.lruimage__LruImageView_progressDrawable);
+                setShowProgress(ta.getBoolean(R.styleable.lruimage__LruImageView_showProgress,false));
+            } finally {
+                ta.recycle();
+            }
+
+        }
     }
 
     public boolean isShowProgress() {
@@ -48,11 +61,12 @@ public class LruImageView extends ImageView {
     /**
      * 下载过程中将当前 Drawable 切换到 progress drawable
      * progress drawable 通过 ImageLevel 来显示下载进度
-     * ProgressDrawble 会将 ImageView 的 ScaleType 固定为 ScaleType.CENTER
+     * ProgressDrawable 会将 ImageView 的 ScaleType 固定为 ScaleType.CENTER
      * 将原来的 ScaleType 保存在 originScaleType
      * 图片下载完毕要显示图片时再切换回来。
+     * FIXME 自定义的 ProgressDrawable 不一定需要 ScaleType.CENTER
      *
-     * @param showProgress 是否显示下载进度
+     * @param showProgress 是否显示加载进度
      */
     public void setShowProgress(boolean showProgress) {
         if (this.mShowProgress != showProgress) {
@@ -66,18 +80,22 @@ public class LruImageView extends ImageView {
 
     }
 
-    public ProgressDrawableBase getProgressDrawable() {
+    public Drawable getProgressDrawable() {
         return mProgressDrawable;
     }
 
-    public void setProgressDrawable(ProgressDrawableBase progressDrawable) {
+    public void setProgressDrawable(@DrawableRes int resId) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            setProgressDrawable(getResources().getDrawable(resId, null));
+        } else {
+            setProgressDrawable(getResources().getDrawable(resId));
+        }
+    }
+
+    public void setProgressDrawable(Drawable progressDrawable) {
         if (mProgressDrawable != progressDrawable) {
             mProgressDrawable = progressDrawable;
-            if (progressDrawable != null) {
-                mShowProgress = true;
-            }
         }
-
     }
 
     private ProgressDrawableBase buildDefaultProgressDrawable() {
@@ -214,10 +232,16 @@ public class LruImageView extends ImageView {
         Log.d("LruImageView", msg);
     }
 
+
     public ExecutorService getLoader() {
         return mLoader;
     }
 
+    /**
+     * 当使用自定义 TaskBuilder 这个方法将不起作用。
+     * LruImageView 不会复写自定义 TaskBuilder 的 ImageLoader
+     * @param loader
+     */
     public void setLoader(ExecutorService loader) {
         this.mLoader = loader;
     }
