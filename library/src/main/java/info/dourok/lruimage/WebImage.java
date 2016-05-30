@@ -50,14 +50,14 @@ public class WebImage extends LruImage {
      * 根据 ScaleType 和另一个维度是否有指定来计算目标尺寸
      * 1. 长和宽都没有指定的时候返回实际尺寸
      * 2. ScaleType.FIT_XY 如果有最大尺寸，返回最大尺寸，无则返回实际尺寸
-     *    实际意义是将目标尺寸拉伸到实际尺寸
+     * 实际意义是将目标尺寸拉伸到实际尺寸
      * 3. 两个最大值都有一个未指定，如果是次要尺寸，则返回最大尺寸
-     *    如果是主要尺寸，则根据次要尺寸的缩放率，通过实际尺寸计算出目标尺寸
+     * 如果是主要尺寸，则根据次要尺寸的缩放率，通过实际尺寸计算出目标尺寸
      * 4. 两个值都有指定
-     *    在保持实际长宽比的情况下，根据有无 ScaleType.CENTER_CROP
-     *    有则，将实际矩形拉伸到目标矩形，可能会超出目标矩形
-     *    无则，将实际矩形缩放到目标矩形，不会超出目标矩形
-     *
+     * 在保持实际长宽比的情况下，根据有无 ScaleType.CENTER_CROP
+     * 有则，将实际矩形拉伸到目标矩形，可能会超出目标矩形
+     * 无则，将实际矩形缩放到目标矩形，不会超出目标矩形
+     * <p/>
      * Scales one side of a rectangle to fit aspect ratio.
      *
      * @param maxPrimary      Maximum size of the primary dimension (i.e. width for
@@ -137,6 +137,7 @@ public class WebImage extends LruImage {
 
     /**
      * FIXME 缓存有个问题，应该缓存原始图片还是缩放后的图片？
+     *
      * @param context
      * @return
      * @throws LruImageException
@@ -232,7 +233,7 @@ public class WebImage extends LruImage {
 
     @Override
     public String getKey() {
-        String s = "Volley:" + mMaxWidth + url + mMaxWidth;
+        String s = mMaxWidth + "&" + url + "&" + mMaxWidth + "&" + mScaleType;
         return Integer.toHexString(s.hashCode());
         //s = s.replace(":", "_").replace("/", "_").replace(".", "_");
         //return s.substring(s.length() > 64 ? s.length() - 64 : 0, s.length());
@@ -264,14 +265,13 @@ public class WebImage extends LruImage {
             return this;
         }
 
-        public Builder setMaxSize(int maxWidth,int maxHeight) {
+        public Builder setMaxSize(int maxWidth, int maxHeight) {
             this.maxWidth = maxWidth;
             this.maxHeight = maxHeight;
             return this;
         }
 
         /**
-         *
          * @param scaleType 只有 CENTER_CROP 和 FIX_XY 能起效果
          * @return
          */

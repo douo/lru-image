@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -24,17 +25,19 @@ public class MainActivity extends AppCompatActivity {
         LruImageView content = (LruImageView) findViewById(R.id.content);
         LruImageView progress = (LruImageView) findViewById(R.id.progress_demo);
         final LruImageView avatar = (LruImageView) findViewById(R.id.avatar);
-        content.setImage(new WebImage.Builder("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg")
-                .setMaxSize(200,200).create());
+//        content.setImage(new WebImage.Builder("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg")
+//                .setMaxSize(200, 200).create());
+        progress.setShowProgress(true);
         progress.setTaskBuilder(new LruTaskBuilder(this).setCacheLevel(LruImage.CACHE_LEVEL_MEMORY_CACHE));
         progress.setImageUrl("http://breadedcat.com/wp-content/gallery/in-bread-cats/breadedgary-de6ead1589f573b4d667461467a6c90480396974.jpg");
-
         final CircleProgressDrawable drawable = new CircleProgressDrawable(this);
         avatar.setImageDrawable(drawable);
-        new LruTaskBuilder(this).
-                success(new LruTaskBuilder.SuccessCallback() {
+        new LruTaskBuilder(this)
+                .setCacheLevel(LruImage.CACHE_LEVEL_NO_CACHE)
+                .success(new LruTaskBuilder.SuccessCallback() {
                     @Override
                     public void call(Bitmap bitmap) {
+                        Log.d("LruImage", bitmap.getWidth() + " " + bitmap.getHeight());
                         int size = Math.min(bitmap.getWidth(), bitmap.getHeight());
                         RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(getResources(), Bitmap.createScaledBitmap(bitmap, size, size, false));
                         drawable.setAntiAlias(true);
@@ -46,10 +49,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onProgressUpdate(LruImage image, int total, int position) {
                 avatar.setImageLevel((int) (1.f * position / total * 10000));
-//                Log.d("LruImage", "progress:" + position + "/" + total);
+                Log.d("LruImage", "progress:" + position + "/" + total);
             }
         }).execute(new WebImage.Builder("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg")
-                .setMaxSize(4096, 4096).create());
+                .setMaxSize(200, 4096).create());
 
     }
 

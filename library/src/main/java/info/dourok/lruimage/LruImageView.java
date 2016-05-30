@@ -72,7 +72,11 @@ public class LruImageView extends ImageView {
     public void setProgressDrawable(ProgressDrawableBase progressDrawable) {
         if (mProgressDrawable != progressDrawable) {
             mProgressDrawable = progressDrawable;
+            if (progressDrawable != null) {
+                mShowProgress = true;
+            }
         }
+
     }
 
     private ProgressDrawableBase buildDefaultProgressDrawable() {
@@ -91,6 +95,7 @@ public class LruImageView extends ImageView {
     /**
      * Helpers to set image by URL
      * TODO support more protocol
+     *
      * @param url
      */
     //
