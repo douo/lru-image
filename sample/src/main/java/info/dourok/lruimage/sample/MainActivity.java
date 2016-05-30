@@ -22,18 +22,35 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // 直接显示 url
         LruImageView content = (LruImageView) findViewById(R.id.content);
+        content.setImageUrl("http://breadedcat.com/wp-content/gallery/in-bread-cats/20c.jpg");
+
+        content.setShowProgress(true); // 显示 progress
+        // 设置 progress drawble
+        // LruImageView 通过 imageLevel 来实现加载动画
+        // 默认加载动画是 CircleProgressDrawable
+        content.setProgressDrawable(new CircleProgressDrawable(this));
+        // 设置加载失败显示的 drawable
+//        content.setFallbackResource(R.drawable.fail);
+        // 这些属性都支持通过 xml 配置
+
+        // 通过 UrlImage.Builder 来设置图片缩放大小
+        content.setImage(new UrlImage.Builder("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg")
+                .setMaxSize(200, 200).create()); // LruImageView 可支持直接设置 LruImage
+
         LruImageView progress = (LruImageView) findViewById(R.id.progress_demo);
         final LruImageView avatar = (LruImageView) findViewById(R.id.avatar);
-//        content.setImage(new WebImage.Builder("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg")
-//                .setMaxSize(200, 200).create());
-        progress.setShowProgress(true);
-        progress.setTaskBuilder(new LruTaskBuilder(this).setCacheLevel(LruImage.CACHE_LEVEL_MEMORY_CACHE));
+
+        progress.setTaskBuilder(new LruTaskBuilder(this).setCacheLevel(LruImage.CACHE_LEVEL_NO_CACHE));
+
         progress.setImageUrl("http://breadedcat.com/wp-content/gallery/in-bread-cats/breadedgary-de6ead1589f573b4d667461467a6c90480396974.jpg");
         final CircleProgressDrawable drawable = new CircleProgressDrawable(this);
         avatar.setImageDrawable(drawable);
+        // 通过 LruImageTask 来管理图片请求和自定义回调
+        // 通过 LruTaskBuilder 来创建 LruImageTask
         new LruTaskBuilder(this)
-                .setCacheLevel(LruImage.CACHE_LEVEL_NO_CACHE)
                 .success(new LruTaskBuilder.SuccessCallback() {
                     @Override
                     public void call(Bitmap bitmap) {
@@ -52,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("LruImage", "progress:" + position + "/" + total);
             }
         }).execute(new UrlImage.Builder("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg")
-                .setMaxSize(200, 4096).create());
+                .setMaxSize(200, 200).create());
 
     }
 
