@@ -1,4 +1,4 @@
-package info.dourok.lruimage;
+package info.dourok.lruimage.image;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -12,11 +12,13 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
+import info.dourok.lruimage.LruImage;
+
 /**
  * Created by John on 2015/9/23.
  * Modified from volley
  */
-public class WebImage extends ScalableImage {
+public class WebImage extends UrlImage {
 
     private static final int CONNECT_TIMEOUT = 5000;
     private static final int READ_TIMEOUT = 10000;
@@ -39,7 +41,7 @@ public class WebImage extends ScalableImage {
                     ScaleType scaleType, Config decodeConfig) {
         super(maxWidth, maxHeight, scaleType, decodeConfig);
         this.url = url;
-        setCacheLevel(CACHE_LEVEL_DISK_CACHE | CACHE_LEVEL_MEMORY_CACHE);
+        setCacheLevel(LruImage.CACHE_LEVEL_DISK_CACHE | LruImage.CACHE_LEVEL_MEMORY_CACHE);
     }
 
     private URLConnection newConnection() throws IOException {
@@ -84,51 +86,5 @@ public class WebImage extends ScalableImage {
         return Integer.toHexString(s.hashCode());
         //s = s.replace(":", "_").replace("/", "_").replace(".", "_");
         //return s.substring(s.length() > 64 ? s.length() - 64 : 0, s.length());
-    }
-
-    public static class Builder {
-        private Config decodeConfig;
-        private int maxWidth;
-        private int maxHeight;
-        private String url;
-        private ScaleType scaleType;
-
-        public Builder(String url) {
-            this.url = url;
-        }
-
-        public Builder setDecodeConfig(Config decodeConfig) {
-            this.decodeConfig = decodeConfig;
-            return this;
-        }
-
-        public Builder setMaxWidth(int maxWidth) {
-            this.maxWidth = maxWidth;
-            return this;
-        }
-
-        public Builder setMaxHeight(int maxHeight) {
-            this.maxHeight = maxHeight;
-            return this;
-        }
-
-        public Builder setMaxSize(int maxWidth, int maxHeight) {
-            this.maxWidth = maxWidth;
-            this.maxHeight = maxHeight;
-            return this;
-        }
-
-        /**
-         * @param scaleType 只有 CENTER_CROP 和 FIX_XY 能起效果
-         * @return
-         */
-        public Builder setScaleType(ScaleType scaleType) {
-            this.scaleType = scaleType;
-            return this;
-        }
-
-        public WebImage create() {
-            return new WebImage(url, maxWidth, maxHeight, scaleType, decodeConfig);
-        }
     }
 }

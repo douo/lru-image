@@ -1,8 +1,10 @@
-package info.dourok.lruimage;
+package info.dourok.lruimage.image;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+
+import info.dourok.lruimage.LruImage;
 
 /**
  * Created by charry on 2014/11/21.

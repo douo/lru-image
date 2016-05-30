@@ -1,4 +1,4 @@
-package info.dourok.lruimage;
+package info.dourok.lruimage.image;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -11,7 +11,7 @@ import java.io.IOException;
 /**
  * Created by larry on 5/30/16.
  */
-public class ContentImage extends ScalableImage {
+public class ContentImage extends UrlImage {
     private Uri imageUri;
 
     public ContentImage(Uri imageUri, int maxWidth, int maxHeight,

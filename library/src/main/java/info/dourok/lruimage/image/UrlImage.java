@@ -1,16 +1,20 @@
-package info.dourok.lruimage;
+package info.dourok.lruimage.image;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.widget.ImageView;
 
 import java.io.IOException;
 
+import info.dourok.lruimage.LruImage;
+import info.dourok.lruimage.LruImageException;
+
 /**
  * Created by larry on 5/30/16.
  */
-public abstract class ScalableImage extends LruImage {
+public abstract class UrlImage extends LruImage {
     /**
      * Decoding lock so that we don't decode more than one image at a time (to avoid OOM's)
      */
@@ -21,8 +25,8 @@ public abstract class ScalableImage extends LruImage {
     private final int mMaxHeight;
     private final ImageView.ScaleType mScaleType;
 
-    public ScalableImage(int maxWidth, int maxHeight,
-                         ImageView.ScaleType scaleType, Bitmap.Config decodeConfig) {
+    public UrlImage(int maxWidth, int maxHeight,
+                    ImageView.ScaleType scaleType, Bitmap.Config decodeConfig) {
         mDecodeConfig = decodeConfig;
         mMaxWidth = maxWidth;
         mMaxHeight = maxHeight;
@@ -41,7 +45,7 @@ public abstract class ScalableImage extends LruImage {
      * 在保持实际长宽比的情况下，根据有无 ScaleType.CENTER_CROP
      * 有则，将实际矩形拉伸到目标矩形，可能会超出目标矩形
      * 无则，将实际矩形缩放到目标矩形，不会超出目标矩形
-     * <p/>
+     * <p>
      * Scales one side of a rectangle to fit aspect ratio.
      *
      * @param maxPrimary      Maximum size of the primary dimension (i.e. width for
@@ -146,6 +150,7 @@ public abstract class ScalableImage extends LruImage {
 
     /**
      * The real guts of parseNetworkResponse. Broken out for readability.
+     *
      * @param context
      */
     private Bitmap doParse(Context context) throws IOException {
@@ -157,7 +162,7 @@ public abstract class ScalableImage extends LruImage {
         } else {
             // If we have to resize this image, first get the natural bounds.
             decodeOptions.inJustDecodeBounds = true;
-            decodingBitmap(context,decodeOptions);
+            decodingBitmap(context, decodeOptions);
             int actualWidth = decodeOptions.outWidth;
             int actualHeight = decodeOptions.outHeight;
 
@@ -194,5 +199,60 @@ public abstract class ScalableImage extends LruImage {
     @Override
     public String getKey() {
         return mMaxWidth + "&" + mMaxWidth + "&" + mScaleType;
+    }
+
+    public static class Builder {
+        private Bitmap.Config decodeConfig;
+        private int maxWidth;
+        private int maxHeight;
+        private String url;
+        private ImageView.ScaleType scaleType;
+
+        public Builder(String url) {
+            this.url = url;
+        }
+
+        public Builder setDecodeConfig(Bitmap.Config decodeConfig) {
+            this.decodeConfig = decodeConfig;
+            return this;
+        }
+
+        public Builder setMaxWidth(int maxWidth) {
+            this.maxWidth = maxWidth;
+            return this;
+        }
+
+        public Builder setMaxHeight(int maxHeight) {
+            this.maxHeight = maxHeight;
+            return this;
+        }
+
+        public Builder setMaxSize(int maxWidth, int maxHeight) {
+            this.maxWidth = maxWidth;
+            this.maxHeight = maxHeight;
+            return this;
+        }
+
+        /**
+         * @param scaleType 只有 CENTER_CROP 和 FIX_XY 能起效果
+         * @return
+         */
+        public Builder setScaleType(ImageView.ScaleType scaleType) {
+            this.scaleType = scaleType;
+            return this;
+        }
+
+        public UrlImage create() {
+            if (url.startsWith("http://") || url.startsWith("https://")) {
+                return new WebImage(url, maxWidth, maxHeight, scaleType, decodeConfig);
+            } else if (url.startsWith("content:")) {
+                return new ContentImage(Uri.parse(url), maxWidth, maxHeight, scaleType, decodeConfig);
+            } else if (url.startsWith("file://")) {
+                return new FileImage(url, maxWidth, maxHeight, scaleType, decodeConfig);
+            } else {
+                return new FileImage(url, maxWidth, maxHeight, scaleType, decodeConfig);
+            }
+
+        }
     }
 }

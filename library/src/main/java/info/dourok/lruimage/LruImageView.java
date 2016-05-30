@@ -9,6 +9,7 @@ import android.widget.ImageView;
 
 import java.util.concurrent.ExecutorService;
 
+import info.dourok.lruimage.image.WebImage;
 import info.dourok.lruimage.progress.CircleProgressDrawable;
 import info.dourok.lruimage.progress.ProgressDrawableBase;
 

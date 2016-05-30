@@ -12,7 +12,7 @@ import android.view.MenuItem;
 import info.dourok.lruimage.LruImage;
 import info.dourok.lruimage.LruImageView;
 import info.dourok.lruimage.LruTaskBuilder;
-import info.dourok.lruimage.WebImage;
+import info.dourok.lruimage.image.UrlImage;
 import info.dourok.lruimage.progress.CircleProgressDrawable;
 
 
@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
                 avatar.setImageLevel((int) (1.f * position / total * 10000));
                 Log.d("LruImage", "progress:" + position + "/" + total);
             }
-        }).execute(new WebImage.Builder("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg")
+        }).execute(new UrlImage.Builder("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg")
                 .setMaxSize(200, 4096).create());
 
     }

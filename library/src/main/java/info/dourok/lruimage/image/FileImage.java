@@ -1,4 +1,4 @@
-package info.dourok.lruimage;
+package info.dourok.lruimage.image;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -10,7 +10,7 @@ import java.io.IOException;
 /**
  * 从文件中读取图片，支持 file 协议和绝对路径
  */
-public class FileImage extends ScalableImage {
+public class FileImage extends UrlImage {
     private String filePath;
 
     public FileImage(String url, int maxWidth, int maxHeight,
