@@ -68,8 +68,9 @@ public class MainActivity extends AppCompatActivity {
                 avatar.setImageLevel((int) (1.f * position / total * 10000));
                 Log.d("LruImage", "progress:" + position + "/" + total);
             }
-        }).execute(new UrlImage.Builder("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg")
-                .setMaxSize(200, 200).create());
+        })
+                .execute(new UrlImage.Builder("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg")
+                        .setMaxSize(200, 200).create());
 
     }
 

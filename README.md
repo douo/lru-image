@@ -60,7 +60,6 @@ LruImageTask 是实际加载图片的类，它通过在后台线程中调用 Lru
                 .execute(new UrlImage.Builder("http://breadedcat.com/wp-content/uploads/2012/02/breaded-cat-tutorial-1.jpg")
                 .setMaxSize(200, 200).create());
 
-
 ### UrlImage
 
 UrlImage 是 LruImage 的子类，支持加载图片后对图片进行缩放，缩放功能搬运只 Volley。同时，它也是一个抽象类。
